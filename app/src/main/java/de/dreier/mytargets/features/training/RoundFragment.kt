@@ -70,17 +70,17 @@ class RoundFragment :
         actionModeCallback?.setDeleteCallback(this::onDelete)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        LocalBroadcastManager.getInstance(context!!).registerReceiver(
+    override fun onStart() {
+        super.onStart()
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
             updateReceiver,
             IntentFilter(BROADCAST_UPDATE_TRAINING_FROM_REMOTE)
         )
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        LocalBroadcastManager.getInstance(context!!).unregisterReceiver(updateReceiver)
+    override fun onStop() {
+        super.onStop()
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(updateReceiver)
     }
 
     override fun onCreateView(
@@ -92,7 +92,7 @@ class RoundFragment :
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.addItemDecoration(
             DividerItemDecoration(
-                context!!,
+                requireContext(),
                 R.drawable.full_divider
             )
         )
@@ -101,14 +101,15 @@ class RoundFragment :
         binding.recyclerView.adapter = adapter
         binding.fab.visibility = View.GONE
         binding.fab.setOnClickListener {
+            val r = round ?: return@setOnClickListener
             navigationController
-                .navigateToEditEnd(round!!, binding.recyclerView.adapter!!.itemCount)
+                .navigateToEditEnd(r, binding.recyclerView.adapter?.itemCount ?: 0)
                 .fromFab(binding.fab)
                 .start()
         }
         de.dreier.mytargets.utils.ToolbarUtils.applyWindowInsetsToScrollableContent(binding.recyclerView)
         de.dreier.mytargets.utils.ToolbarUtils.applyWindowInsetsToBottom(binding.fab)
-        roundId = arguments!!.getLongOrNull(ROUND_ID) ?:
+        roundId = requireArguments().getLongOrNull(ROUND_ID) ?:
                 throw IllegalStateException("Missing required argument round id!")
 
         setHasOptionsMenu(true)
@@ -121,19 +122,20 @@ class RoundFragment :
     }
 
     override fun onLoad(args: Bundle?): LoaderUICallback {
-        round = roundDAO.loadRound(roundId)
-        val ends = endRepository.loadAugmentedEnds(round!!.id)
-        val showFab = round!!.maxEndCount == null || ends.size < round!!.maxEndCount!!
+        val r = roundDAO.loadRound(roundId)
+        round = r
+        val ends = endRepository.loadAugmentedEnds(r.id)
+        val showFab = r.maxEndCount == null || ends.size < r.maxEndCount!!
 
         return {
-            adapter!!.setList(ends)
+            adapter.setList(ends)
             binding.fab.visibility = if (showFab) View.VISIBLE else View.GONE
 
             ToolbarUtils.setTitle(
                 this@RoundFragment,
-                String.format(Locale.US, "%s %d", getString(R.string.round), round!!.index + 1)
+                String.format(Locale.US, "%s %d", getString(R.string.round), r.index + 1)
             )
-            ToolbarUtils.setSubtitle(this@RoundFragment, round!!.score.toString())
+            ToolbarUtils.setSubtitle(this@RoundFragment, r.score.toString())
         }
     }
 
@@ -148,19 +150,22 @@ class RoundFragment :
                 return true
             }
             R.id.action_comment -> {
-                MaterialDialog.Builder(context!!)
+                val r = round ?: return true
+                MaterialDialog.Builder(requireContext())
                     .title(R.string.comment)
                     .inputType(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-                    .input("", round!!.comment) { _, input ->
-                        round!!.comment = input.toString()
-                        roundDAO.updateRound(round!!)
+                    .input("", r.comment) { _, input ->
+                        r.comment = input.toString()
+                        roundDAO.updateRound(r)
                     }
                     .negativeText(android.R.string.cancel)
                     .show()
                 return true
             }
             R.id.action_scoreboard -> {
-                navigationController.navigateToScoreboard(round!!.trainingId!!, round!!.id)
+                val r = round ?: return true
+                val tId = r.trainingId ?: return true
+                navigationController.navigateToScoreboard(tId, r.id)
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
@@ -168,12 +173,15 @@ class RoundFragment :
     }
 
     override fun onSelected(item: AugmentedEnd) {
-        navigationController.navigateToEditEnd(round!!, item.end.index)
+        val r = round ?: return
+        navigationController.navigateToEditEnd(r, item.end.index)
             .start()
     }
 
     private fun onEdit(itemId: Long) {
-        navigationController.navigateToEditEnd(round!!, adapter!!.getItemById(itemId)!!.end.index)
+        val r = round ?: return
+        val end = adapter.getItemById(itemId) ?: return
+        navigationController.navigateToEditEnd(r, end.end.index)
             .start()
     }
 
@@ -206,16 +214,17 @@ class RoundFragment :
         private val binding = ItemEndBinding.bind(itemView)
 
         override fun bindItem(item: AugmentedEnd) {
+            val r = round ?: return
             val shots = item.shots
-            if (SettingsManager.shouldSortTarget(round!!.target)) {
+            if (SettingsManager.shouldSortTarget(r.target)) {
                 shots.sort()
             }
-            binding.shoots.setShots(round!!.target, shots)
+            binding.shoots.setShots(r.target, shots)
             binding.imageIndicator.visibility =
                     if (item.images.isEmpty()) View.INVISIBLE else View.VISIBLE
             binding.end.text = getString(R.string.end_n, item.end.index + 1)
             binding.endDetails.text = item.end.score.format(
-                Utils.getCurrentLocale(context!!),
+                Utils.getCurrentLocale(requireContext()),
                 SettingsManager.scoreConfiguration
             )
         }

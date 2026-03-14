@@ -38,7 +38,7 @@ class LicencesFragment : Fragment() {
     private var layoutManager: RecyclerView.LayoutManager? = null
 
     private fun createAdapter(): RecyclerView.Adapter<*> {
-        val homage = Homage(activity!!, R.raw.licences)
+        val homage = Homage(requireActivity(), R.raw.licences)
 
         // Adds a custom license definition to enable matching in your JSON list
         homage.addLicense(
@@ -49,7 +49,7 @@ class LicencesFragment : Fragment() {
         homage.refreshLibraries()
 
         binding.recyclerView.addItemDecoration(
-            DividerItemDecoration(context!!, R.drawable.full_divider)
+            DividerItemDecoration(requireContext(), R.drawable.full_divider)
         )
         binding.fab.visibility = View.GONE
         return HomageAdapter(homage, HomageView.ExtraInfoMode.EXPANDABLE, false)

@@ -203,7 +203,7 @@ object ToolbarUtils {
     }
 
     fun showUpAsX(fragment: Fragment) {
-        showUpAsX((fragment.activity as AppCompatActivity?)!!)
+        showUpAsX(fragment.requireActivity() as AppCompatActivity)
     }
 
     private fun showUpAsX(activity: AppCompatActivity) {
@@ -213,7 +213,7 @@ object ToolbarUtils {
     }
 
     fun showHomeAsUp(fragment: Fragment) {
-        showHomeAsUp((fragment.activity as AppCompatActivity?)!!)
+        showHomeAsUp(fragment.requireActivity() as AppCompatActivity)
     }
 
     fun showHomeAsUp(activity: AppCompatActivity) {
@@ -222,8 +222,8 @@ object ToolbarUtils {
     }
 
     fun setSupportActionBar(fragment: Fragment, toolbar: Toolbar) {
-        val activity = fragment.activity as AppCompatActivity?
-        activity!!.setSupportActionBar(toolbar)
+        val activity = fragment.requireActivity() as AppCompatActivity
+        activity.setSupportActionBar(toolbar)
         
         // If the activity is SimpleFragmentActivityBase, hide its toolbar since fragment has its own
         if (activity is de.dreier.mytargets.base.activities.SimpleFragmentActivityBase) {
@@ -245,11 +245,11 @@ object ToolbarUtils {
     }
 
     fun setTitle(fragment: Fragment, @StringRes title: Int) {
-        setTitle((fragment.activity as AppCompatActivity?)!!, title)
+        setTitle(fragment.requireActivity() as AppCompatActivity, title)
     }
 
     fun setTitle(fragment: Fragment, title: String) {
-        setTitle((fragment.activity as AppCompatActivity?)!!, title)
+        setTitle(fragment.requireActivity() as AppCompatActivity, title)
     }
 
     fun setTitle(activity: AppCompatActivity, @StringRes title: Int) {
@@ -263,8 +263,8 @@ object ToolbarUtils {
     }
 
     fun setSubtitle(fragment: Fragment, subtitle: String) {
-        val activity = fragment.activity as AppCompatActivity?
-        setSubtitle(activity!!, subtitle)
+        val activity = fragment.requireActivity() as AppCompatActivity
+        setSubtitle(activity, subtitle)
     }
 
     fun setSubtitle(activity: AppCompatActivity, subtitle: String) {

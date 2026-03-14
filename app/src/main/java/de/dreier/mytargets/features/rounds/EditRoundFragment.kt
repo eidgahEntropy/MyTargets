@@ -50,9 +50,10 @@ class EditRoundFragment : EditFragmentBase() {
         binding = DataBindingUtil
             .inflate(inflater, R.layout.fragment_edit_round, container, false)
 
-        trainingId = arguments!!.getLong(ITEM_ID)
-        if (arguments!!.containsKey(ROUND_ID)) {
-            roundId = arguments!!.getLong(ROUND_ID)
+        val args = requireArguments()
+        trainingId = args.getLong(ITEM_ID)
+        if (args.containsKey(ROUND_ID)) {
+            roundId = args.getLong(ROUND_ID)
         }
 
         ToolbarUtils.setSupportActionBar(this, binding.toolbar)
@@ -78,19 +79,23 @@ class EditRoundFragment : EditFragmentBase() {
         binding.target.setOnClickListener { selectedItem, index ->
             val fixedType =
                 if (roundId == null) TargetListFragment.EFixedType.NONE else TargetListFragment.EFixedType.TARGET
-            navigationController.navigateToTarget(
-                selectedItem!!,
-                index,
-                TargetSelector.TARGET_REQUEST_CODE,
-                fixedType
-            )
+            selectedItem?.let {
+                navigationController.navigateToTarget(
+                    it,
+                    index,
+                    TargetSelector.TARGET_REQUEST_CODE,
+                    fixedType
+                )
+            }
         }
         binding.distance.setOnClickListener { selectedItem, index ->
-            navigationController.navigateToDistance(
-                selectedItem!!,
-                index,
-                DistanceSelector.DISTANCE_REQUEST_CODE
-            )
+            selectedItem?.let {
+                navigationController.navigateToDistance(
+                    it,
+                    index,
+                    DistanceSelector.DISTANCE_REQUEST_CODE
+                )
+            }
         }
 
         if (roundId == null) {
@@ -98,11 +103,13 @@ class EditRoundFragment : EditFragmentBase() {
             loadRoundDefaultValues()
         } else {
             ToolbarUtils.setTitle(this, R.string.edit_round)
-            val round = roundDAO.loadRound(roundId!!)
+            val rid = roundId ?: return binding.root
+            val round = roundDAO.loadRound(rid)
             binding.distance.setItem(round.distance)
             binding.target.setItem(round.target)
             binding.notEditable.visibility = View.GONE
-            if (trainingDAO.loadTraining(round.trainingId!!).standardRoundId != null) {
+            val tId = round.trainingId ?: return binding.root
+            if (trainingDAO.loadTraining(tId).standardRoundId != null) {
                 binding.distanceLayout.visibility = View.GONE
             }
         }
@@ -111,20 +118,20 @@ class EditRoundFragment : EditFragmentBase() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        Utils.setupFabTransform(activity!!, binding.root)
+        Utils.setupFabTransform(requireActivity(), binding.root)
     }
 
     override fun onSave() {
         navigationController.finish()
         if (roundId == null) {
-            val round = onSaveRound()
-            navigationController.navigateToRound(round!!)
+            val round = onSaveRound() ?: return
+            navigationController.navigateToRound(round)
                 .noAnimation()
                 .start()
             navigationController.navigateToCreateEnd(round)
         } else {
             onSaveRound()
-            activity!!.overridePendingTransition(R.anim.left_in, R.anim.right_out)
+            requireActivity().overridePendingTransition(R.anim.left_in, R.anim.right_out)
         }
     }
 
@@ -139,10 +146,11 @@ class EditRoundFragment : EditFragmentBase() {
             round.maxEndCount = null
             round.index = roundDAO.loadRounds(training.id).size
         } else {
-            round = roundDAO.loadRound(roundId!!)
+            val rid = roundId ?: return null
+            round = roundDAO.loadRound(rid)
         }
-        round.distance = binding.distance.selectedItem!!
-        round.target = binding.target.selectedItem!!
+        round.distance = binding.distance.selectedItem ?: return null
+        round.target = binding.target.selectedItem ?: return null
         if (roundId == null) {
             round.id = roundDAO.insertRound(round)
         } else {

@@ -37,14 +37,14 @@ class InputSettingsFragment : SettingsFragmentBase() {
         setSummary(
             SettingsManager.KEY_INPUT_ARROW_DIAMETER_SCALE, String.format(
                 Utils
-                    .getCurrentLocale(context!!), "%.1fx", SettingsManager
+                    .getCurrentLocale(requireContext()), "%.1fx", SettingsManager
                     .inputArrowDiameterScale
             )
         )
         setSummary(
             SettingsManager.KEY_INPUT_TARGET_ZOOM, String.format(
                 Utils
-                    .getCurrentLocale(context!!), "%.1fx", SettingsManager
+                    .getCurrentLocale(requireContext()), "%.1fx", SettingsManager
                     .inputTargetZoom
             )
         )

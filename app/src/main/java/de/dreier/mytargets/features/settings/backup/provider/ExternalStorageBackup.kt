@@ -105,7 +105,8 @@ object ExternalStorageBackup {
         ) {
             val file = File(backup.fileId)
             try {
-                BackupUtils.importZip(context!!.get()!!, FileInputStream(file))
+                val ctx = context?.get() ?: return listener.onError("Context no longer available")
+                BackupUtils.importZip(ctx, FileInputStream(file))
                 listener.onFinished()
             } catch (e: IOException) {
                 listener.onError(e.localizedMessage)

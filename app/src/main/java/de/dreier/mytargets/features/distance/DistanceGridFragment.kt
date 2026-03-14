@@ -50,12 +50,12 @@ class DistanceGridFragment : SelectItemFragmentBase<Dimension, SimpleListAdapter
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_list, container, false)
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = GridLayoutManager(activity, 3)
-        binding.recyclerView.addItemDecoration(DistanceItemDecorator(activity!!, 3))
+        binding.recyclerView.addItemDecoration(DistanceItemDecorator(requireActivity(), 3))
         adapter = DistanceAdapter()
         binding.recyclerView.itemAnimator = SlideInItemAnimator()
         binding.recyclerView.adapter = adapter
         binding.fab.setOnClickListener {
-            DistanceInputDialog.Builder(context!!)
+            DistanceInputDialog.Builder(requireContext())
                 .setUnit(unit.toString())
                 .setOnClickListener(this@DistanceGridFragment)
                 .show()
@@ -73,9 +73,9 @@ class DistanceGridFragment : SelectItemFragmentBase<Dimension, SimpleListAdapter
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(DistancesViewModel::class.java)
-        val bundle = arguments!!
+        val bundle = requireArguments()
         val distance: Dimension = bundle.getParcelable(ITEM)!!
         unit = Unit.from(bundle.getString(DISTANCE_UNIT))!!
         viewModel.setUnit(unit)

@@ -15,11 +15,9 @@
 
 package de.dreier.mytargets.features.scoreboard
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.print.PrintAttributes
@@ -54,6 +52,10 @@ import de.dreier.mytargets.utils.MobileWearableClient
 import de.dreier.mytargets.utils.MobileWearableClient.Companion.BROADCAST_UPDATE_TRAINING_FROM_REMOTE
 import de.dreier.mytargets.utils.ToolbarUtils
 import de.dreier.mytargets.utils.Utils
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import de.dreier.mytargets.utils.print.CustomPrintDocumentAdapter
 import de.dreier.mytargets.utils.print.ViewToPdfWriter
 import de.dreier.mytargets.utils.toUri
@@ -66,9 +68,9 @@ class ScoreboardFragment : FragmentBase() {
 
     private var trainingId: Long = 0
     private var roundId: Long = 0
-    private var binding: FragmentScoreboardBinding? = null
+    private lateinit var binding: FragmentScoreboardBinding
     private var training: Training? = null
-    private lateinit var rounds: List<Round>
+    private var rounds: List<Round> = emptyList()
 
     private val database by lazy(LazyThreadSafetyMode.NONE) { ApplicationInstance.db }
     private val trainingDAO by lazy(LazyThreadSafetyMode.NONE) { database.trainingDAO() }
@@ -100,55 +102,61 @@ class ScoreboardFragment : FragmentBase() {
     ): View? {
         binding = FragmentScoreboardBinding.inflate(inflater, container, false)
 
-        val args = arguments
-        trainingId = args!!.getLong(ScoreboardActivity.TRAINING_ID)
+        val args = requireArguments()
+        trainingId = args.getLong(ScoreboardActivity.TRAINING_ID)
         roundId = args.getLong(ScoreboardActivity.ROUND_ID, -1L)
         setHasOptionsMenu(true)
 
-        return binding!!.root
+        return binding.root
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        
-        ToolbarUtils.setSupportActionBar(this, binding!!.toolbar)
+
+        ToolbarUtils.setSupportActionBar(this, binding.toolbar)
         ToolbarUtils.showHomeAsUp(this)
-        ToolbarUtils.applyWindowInsetsToScrollableContent(binding!!.scrollView)
-        LocalBroadcastManager.getInstance(context!!).registerReceiver(
+        ToolbarUtils.applyWindowInsetsToScrollableContent(binding.scrollView)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
             updateReceiver,
             IntentFilter(BROADCAST_UPDATE_TRAINING_FROM_REMOTE)
         )
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        LocalBroadcastManager.getInstance(context!!).unregisterReceiver(updateReceiver)
+    override fun onStop() {
+        super.onStop()
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(updateReceiver)
     }
 
     override fun onLoad(args: Bundle?): LoaderUICallback {
         training = trainingDAO.loadTraining(trainingId)
-        val archerSignature = trainingRepository.getOrCreateArcherSignature(training!!)
-        val witnessSignature = trainingRepository.getOrCreateWitnessSignature(training!!)
+        val t = training ?: return {}
+        val archerSignature = trainingRepository.getOrCreateArcherSignature(t)
+        val witnessSignature = trainingRepository.getOrCreateWitnessSignature(t)
 
         rounds = if (roundId == -1L) {
-            roundDAO.loadRounds(training!!.id)
+            roundDAO.loadRounds(t.id)
         } else {
             listOf(roundDAO.loadRound(roundId))
         }
+        val ctx = context ?: return {}
         val scoreboard = ScoreboardUtils
             .getScoreboardView(
-                context!!,
+                ctx,
                 ApplicationInstance.db,
-                Utils.getCurrentLocale(context!!),
-                training!!,
+                Utils.getCurrentLocale(ctx),
+                t,
                 rounds,
                 SettingsManager.scoreboardConfiguration
             )
         return {
-            binding!!.progressBar.visibility = GONE
+            binding.progressBar.visibility = GONE
             scoreboard.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            binding!!.container.removeAllViews()
-            binding!!.container.addView(scoreboard)
+            binding.container.removeAllViews()
+            binding.container.addView(scoreboard)
 
             val signaturesView = scoreboard.findViewById<View>(R.id.signatures_layout)
             if (signaturesView != null) {
@@ -225,58 +233,52 @@ class ScoreboardFragment : FragmentBase() {
     }
 
     /* Called after the user selected with items he wants to share */
-    @SuppressLint("StaticFieldLeak")
     private fun share() {
+        val ctx = context ?: return
+        val t = training ?: return
+        if (rounds.isEmpty()) return
         val fileType = SettingsManager.scoreboardShareFileType
-        object : AsyncTask<Void, Void, Uri>() {
-
-            override fun doInBackground(vararg objects: Void): Uri? {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val uri = withContext(Dispatchers.IO) {
                 try {
-                    val scoreboardFile = File(context!!.cacheDir, getDefaultFileName(fileType))
+                    val scoreboardFile = File(ctx.cacheDir, getDefaultFileName(fileType))
                     val content = ScoreboardUtils
                         .getScoreboardView(
-                            context!!,
+                            ctx,
                             ApplicationInstance.db,
-                            Utils.getCurrentLocale(context!!),
-                            training!!,
+                            Utils.getCurrentLocale(ctx),
+                            t,
                             rounds,
                             SettingsManager.scoreboardConfiguration
                         )
                     if (fileType === EFileType.PDF && Utils.isKitKat) {
                         ScoreboardUtils.generatePdf(content, scoreboardFile)
                     } else {
-                        ScoreboardUtils.generateBitmap(context!!, content, scoreboardFile)
+                        ScoreboardUtils.generateBitmap(ctx, content, scoreboardFile)
                     }
-
-                    return scoreboardFile.toUri(context!!)
+                    scoreboardFile.toUri(ctx)
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    return null
-                }
-
-            }
-
-            override fun onPostExecute(uri: Uri?) {
-                super.onPostExecute(uri)
-                if (uri == null) {
-                    Snackbar.make(binding!!.root, R.string.sharing_failed, Snackbar.LENGTH_SHORT)
-                        .show()
-                } else {
-                    // Build and fire intent to ask for share provider
-                    val shareIntent = Intent(Intent.ACTION_SEND)
-                    shareIntent.type = fileType.mimeType
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                    startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
+                    null
                 }
             }
-        }.execute()
+            if (uri == null) {
+                Snackbar.make(binding.root, R.string.sharing_failed, Snackbar.LENGTH_SHORT)
+                    .show()
+            } else {
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                shareIntent.type = fileType.mimeType
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
+            }
+        }
     }
 
-    @SuppressLint("StaticFieldLeak")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private fun print() {
         val context = context ?: return
         val training = training ?: return
+        if (rounds.isEmpty()) return
 
         val fileName = getDefaultFileName(EFileType.PDF)
 
@@ -295,7 +297,8 @@ class ScoreboardFragment : FragmentBase() {
     }
 
     fun getDefaultFileName(extension: EFileType): String {
-        return training!!.date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "-" +
+        val t = training ?: return "scoreboard.${extension.name.lowercase(Locale.US)}"
+        return t.date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "-" +
                 getString(R.string.scoreboard) + "." + extension.name.lowercase(Locale.US)
     }
 }

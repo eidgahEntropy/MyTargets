@@ -69,7 +69,7 @@ class EditBowFragment : EditWithImageFragmentBase<BowImage>(R.drawable.recurve_b
         contentBinding.moreFields.setOnClickListener { contentBinding.showAll = true }
 
         val bowType = EBowType
-            .valueOf(arguments!!.getString(BOW_TYPE, EBowType.RECURVE_BOW.name))
+            .valueOf(requireArguments().getString(BOW_TYPE, EBowType.RECURVE_BOW.name))
 
         if (savedInstanceState == null || bow == null) {
             val bundle = arguments

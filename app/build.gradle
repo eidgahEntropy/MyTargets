@@ -226,6 +226,8 @@ dependencies {
 
     implementation libs.arch.lifecycle.extensions
     implementation libs.lifecycle.livedata.ktx
+    implementation libs.lifecycle.runtime.ktx
+    implementation libs.coroutines.android
     kapt libs.arch.lifecycle.compiler
     implementation libs.arch.room.runtime
     kapt libs.arch.room.compiler

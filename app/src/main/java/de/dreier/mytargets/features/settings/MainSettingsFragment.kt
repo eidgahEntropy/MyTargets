@@ -25,7 +25,7 @@ class MainSettingsFragment : SettingsFragmentBase() {
         super.onSharedPreferenceChanged(sharedPreferences, key)
         if (key == SettingsManager.KEY_LANGUAGE) {
             Language.setFromPreference(activity, SettingsManager.KEY_LANGUAGE, true)
-            activity!!.recreate()
+            requireActivity().recreate()
         }
     }
 }

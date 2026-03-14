@@ -25,12 +25,12 @@ class DatePickerFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         // Use the current date as the default date in the picker
-        val date = arguments!!.getSerializable(ARG_CURRENT_DATE) as LocalDate
+        val date = requireArguments().getSerializable(ARG_CURRENT_DATE) as LocalDate
 
         // Create a new instance of DatePickerDialog and return it
         val listener = targetFragment as DatePickerDialog.OnDateSetListener?
         return DatePickerDialog(
-            activity!!, listener, date.year,
+            requireActivity(), listener, date.year,
             date.monthValue - 1, date.dayOfMonth
         )
     }

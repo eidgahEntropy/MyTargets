@@ -75,7 +75,7 @@ class StandardRoundListFragment :
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.itemAnimator = SlideInItemAnimator()
         val usedRounds = SettingsManager.standardRoundsLastUsed
-        adapter = StandardRoundListAdapter(context!!, usedRounds)
+        adapter = StandardRoundListAdapter(requireContext(), usedRounds)
         binding.recyclerView.adapter = adapter
         binding.fab.visibility = View.GONE
         ToolbarUtils.showUpAsX(this)
@@ -95,7 +95,7 @@ class StandardRoundListFragment :
     override fun onLoad(args: Bundle?): LoaderUICallback {
         val data = if (args != null && args.containsKey(KEY_QUERY)) {
             val query = args.getString(KEY_QUERY)
-            standardRoundDAO.getAllSearch("%${query!!.replace(' ', '%')}%")
+            standardRoundDAO.getAllSearch("%${query.orEmpty().replace(' ', '%')}%")
         } else {
             standardRoundDAO.loadStandardRounds()
         }.map {
@@ -106,7 +106,7 @@ class StandardRoundListFragment :
         }
         return {
             adapter.setList(data)
-            selectItem(binding.recyclerView, currentSelection!!)
+            currentSelection?.let { selectItem(binding.recyclerView, it) }
         }
     }
 
@@ -114,7 +114,7 @@ class StandardRoundListFragment :
         super.onResume()
         if (searchView != null) {
             val args = Bundle()
-            args.putString(KEY_QUERY, searchView!!.query.toString())
+            args.putString(KEY_QUERY, searchView?.query.toString())
             reloadData(args)
         } else {
             reloadData()
@@ -130,13 +130,13 @@ class StandardRoundListFragment :
     }
 
     override fun onLongClick(holder: SelectableViewHolder<AugmentedStandardRound>) {
-        val item = holder.item!!
+        val item = holder.item ?: return
         if (item.standardRound.club == StandardRoundFactory.CUSTOM) {
             navigationController.navigateToEditStandardRound(item)
                 .forResult(EDIT_STANDARD_ROUND)
                 .start()
         } else {
-            MaterialDialog.Builder(context!!)
+            MaterialDialog.Builder(requireContext())
                 .title(R.string.use_as_template)
                 .content(R.string.create_copy)
                 .positiveText(android.R.string.yes)
@@ -155,14 +155,14 @@ class StandardRoundListFragment :
         inflater.inflate(R.menu.search, menu)
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView
-        searchView!!.setOnQueryTextListener(this)
-        val closeButton = searchView!!.findViewById<ImageView>(R.id.search_close_btn)
+        searchView?.setOnQueryTextListener(this)
+        val closeButton = searchView?.findViewById<ImageView>(R.id.search_close_btn)
         // Set on click listener
-        closeButton.setOnClickListener {
-            val et = searchView!!.findViewById<EditText>(R.id.search_src_text)
-            et.setText("")
-            searchView!!.setQuery("", false)
-            searchView!!.onActionViewCollapsed()
+        closeButton?.setOnClickListener {
+            val et = searchView?.findViewById<EditText>(R.id.search_src_text)
+            et?.setText("")
+            searchView?.setQuery("", false)
+            searchView?.onActionViewCollapsed()
             searchItem.collapseActionView()
         }
     }
@@ -181,7 +181,8 @@ class StandardRoundListFragment :
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK && requestCode == NEW_STANDARD_ROUND && data != null) {
-            persistSelection(data.getParcelableExtra(ITEM)!!)
+            val selected: AugmentedStandardRound = data.getParcelableExtra(ITEM) ?: return
+            persistSelection(selected)
             navigationController.setResultSuccess(data)
             navigationController.finish()
         } else if (requestCode == EDIT_STANDARD_ROUND && data != null) {
@@ -197,8 +198,10 @@ class StandardRoundListFragment :
     }
 
     override fun onSave(): AugmentedStandardRound {
-        persistSelection(currentSelection!!)
-        return currentSelection!!
+        val selection = currentSelection
+            ?: throw IllegalStateException("Cannot save without a selection")
+        persistSelection(selection)
+        return selection
     }
 
     private fun persistSelection(standardRound: AugmentedStandardRound) {
@@ -245,10 +248,10 @@ class StandardRoundListFragment :
         override fun bindItem(item: AugmentedStandardRound) {
             binding.name.text = item.standardRound.name
 
-            if (item.id == currentSelection!!.id) {
+            if (currentSelection != null && item.id == currentSelection?.id) {
                 binding.image.visibility = View.VISIBLE
                 binding.details.visibility = View.VISIBLE
-                binding.details.text = item.getDescription(activity!!)
+                binding.details.text = item.getDescription(requireActivity())
                 binding.image.setImageDrawable(item.targetDrawable)
             } else {
                 binding.image.visibility = View.GONE

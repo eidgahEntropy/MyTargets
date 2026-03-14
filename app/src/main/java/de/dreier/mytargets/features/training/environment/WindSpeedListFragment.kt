@@ -33,8 +33,8 @@ class WindSpeedListFragment : SelectPureListItemFragmentBase<WindSpeed>(compareB
         savedInstanceState: Bundle?
     ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
-        adapter.setList(WindSpeed.getList(context!!))
-        val windSpeed = arguments!!.getParcelable<WindSpeed>(ITEM)
+        adapter.setList(WindSpeed.getList(requireContext()))
+        val windSpeed = requireArguments().getParcelable<WindSpeed>(ITEM)
         selectItem(binding.recyclerView, windSpeed!!)
         return binding.root
     }
@@ -42,5 +42,5 @@ class WindSpeedListFragment : SelectPureListItemFragmentBase<WindSpeed>(compareB
     override fun getName(item: WindSpeed) = item.name
 
     override fun getDrawable(item: WindSpeed) =
-        ContextCompat.getDrawable(context!!, item.drawable)!!
+        ContextCompat.getDrawable(requireContext(), item.drawable)!!
 }

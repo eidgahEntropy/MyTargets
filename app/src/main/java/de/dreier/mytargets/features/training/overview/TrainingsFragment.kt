@@ -106,7 +106,7 @@ class TrainingsFragment : ExpandableListFragment<Header, Training>() {
         super.onActivityCreated(savedInstanceState)
         setHasOptionsMenu(true)
 
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(TrainingsViewModel::class.java)
         viewModel.trainings.observe(this, Observer { trainings ->
             if (trainings != null) {
@@ -181,7 +181,7 @@ class TrainingsFragment : ExpandableListFragment<Header, Training>() {
             binding.training.text = item.title
             binding.trainingDate.text = item.formattedDate
             binding.gesTraining.text = item.score.format(
-                Utils.getCurrentLocale(context!!),
+                Utils.getCurrentLocale(requireContext()),
                 SettingsManager.scoreConfiguration
             )
         }

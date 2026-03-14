@@ -29,12 +29,12 @@ class ArrowListFragment : SelectPureListItemFragmentBase<Arrow>(compareBy(Arrow:
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(ArrowListViewModel::class.java)
         viewModel.arrows.observe(this, Observer { arrows ->
             if (arrows != null) {
                 adapter.setList(arrows)
-                val arrow = arguments!!.getParcelable<Arrow>(ITEM)
+                val arrow = requireArguments().getParcelable<Arrow>(ITEM)
                 selectItem(binding.recyclerView, arrow!!)
             }
         })

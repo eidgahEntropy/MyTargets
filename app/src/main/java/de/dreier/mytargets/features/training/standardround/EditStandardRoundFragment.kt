@@ -82,27 +82,29 @@ class EditStandardRoundFragment : EditFragmentBase() {
                 )
             } else {
                 ToolbarUtils.setTitle(this, R.string.edit_standard_round)
+                val sr = standardRound ?: return binding.root
                 // Load saved values
-                if (standardRound!!.standardRound.club == StandardRoundFactory.CUSTOM) {
-                    binding.name.setText(standardRound!!.standardRound.name)
+                if (sr.standardRound.club == StandardRoundFactory.CUSTOM) {
+                    binding.name.setText(sr.standardRound.name)
                 } else {
-                    standardRound!!.standardRound.id = 0L
+                    sr.standardRound.id = 0L
                     binding.name.setText(
                         "%s %s".format(
-                            getString(R.string.custom), standardRound!!.standardRound
+                            getString(R.string.custom), sr.standardRound
                                 .name
                         )
                     )
                     // When copying an existing standard round make sure
                     // we don't overwrite the other rounds templates
-                    for (round in standardRound!!.roundTemplates) {
+                    for (round in sr.roundTemplates) {
                         round.id = 0L
                     }
                 }
             }
         }
 
-        adapter = RoundTemplateAdapter(this, standardRound!!.roundTemplates)
+        val sr = standardRound ?: return binding.root
+        adapter = RoundTemplateAdapter(this, sr.roundTemplates)
         binding.rounds.adapter = adapter
         binding.addButton.setOnClickListener { onAddRound() }
         binding.deleteStandardRound.setOnClickListener { onDeleteStandardRound() }
@@ -121,47 +123,50 @@ class EditStandardRoundFragment : EditFragmentBase() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        Utils.setupFabTransform(activity!!, binding.root)
+        Utils.setupFabTransform(requireActivity(), binding.root)
     }
 
     private fun onAddRound() {
-        val newItemIndex = standardRound!!.roundTemplates.size
+        val sr = standardRound ?: return
+        val newItemIndex = sr.roundTemplates.size
         if (newItemIndex > 0) {
-            val r = standardRound!!.roundTemplates[newItemIndex - 1]
+            val r = sr.roundTemplates[newItemIndex - 1]
             val roundTemplate = RoundTemplate()
             roundTemplate.endCount = r.endCount
             roundTemplate.shotsPerEnd = r.shotsPerEnd
             roundTemplate.distance = r.distance
             roundTemplate.targetTemplate = r.targetTemplate
-            standardRound!!.roundTemplates.add(roundTemplate)
+            sr.roundTemplates.add(roundTemplate)
         } else {
             Timber.w("This should never get executed") //TODO remove else part if no reports occur
-            standardRound!!.roundTemplates.add(getDefaultRoundTemplate())
+            sr.roundTemplates.add(getDefaultRoundTemplate())
         }
-        adapter!!.notifyItemInserted(newItemIndex)
+        adapter?.notifyItemInserted(newItemIndex)
     }
 
     private fun onDeleteStandardRound() {
-        standardRoundDAO.deleteStandardRound(standardRound!!.standardRound)
+        val sr = standardRound ?: return
+        standardRoundDAO.deleteStandardRound(sr.standardRound)
         navigationController.setResult(RESULT_STANDARD_ROUND_DELETED)
         navigationController.finish()
     }
 
     override fun onSave() {
-        standardRound!!.standardRound.club = StandardRoundFactory.CUSTOM
-        standardRound!!.standardRound.name = binding.name.text.toString()
+        val sr = standardRound ?: return
+        sr.standardRound.club = StandardRoundFactory.CUSTOM
+        sr.standardRound.name = binding.name.text.toString()
         standardRoundDAO.saveStandardRound(
-            standardRound!!.standardRound,
-            standardRound!!.roundTemplates
+            sr.standardRound,
+            sr.roundTemplates
         )
 
-        val round = standardRound!!.roundTemplates[0]
+        val round = sr.roundTemplates[0]
         SettingsManager.shotsPerEnd = round.shotsPerEnd
         SettingsManager.endCount = round.endCount
         SettingsManager.target = round.targetTemplate
         SettingsManager.distance = round.distance
 
-        navigationController.setResultSuccess(standardRound!!)
+        navigationController.setResultSuccess(sr)
         navigationController.finish()
     }
 
@@ -170,16 +175,17 @@ class EditStandardRoundFragment : EditFragmentBase() {
 
         if (resultCode == Activity.RESULT_OK && data != null) {
             val intentData = data.getBundleExtra(INTENT)
-            val index = intentData?.getInt(SelectorBase.INDEX)
+            val index = intentData?.getInt(SelectorBase.INDEX) ?: return
+            val sr = standardRound ?: return
             when (requestCode) {
                 DistanceSelector.DISTANCE_REQUEST_CODE -> {
-                    standardRound!!.roundTemplates[index!!].distance = data.parcelableExtra(data,ITEM)!!
-                    adapter!!.notifyItemChanged(index)
+                    sr.roundTemplates[index].distance = data.parcelableExtra(data,ITEM) ?: return
+                    adapter?.notifyItemChanged(index)
                 }
                 TargetSelector.TARGET_REQUEST_CODE -> {
-                    standardRound!!.roundTemplates[index!!]
-                        .targetTemplate = data.parcelableExtra(data,ITEM)!!
-                    adapter!!.notifyItemChanged(index)
+                    sr.roundTemplates[index]
+                        .targetTemplate = data.parcelableExtra(data,ITEM) ?: return
+                    adapter?.notifyItemChanged(index)
                 }
             }
         }
@@ -204,18 +210,22 @@ class EditStandardRoundFragment : EditFragmentBase() {
             item.index = position
 
             binding.distance.setOnClickListener { selectedItem, index ->
-                navigationController.navigateToDistance(
-                    selectedItem!!,
-                    index,
-                    DistanceSelector.DISTANCE_REQUEST_CODE
-                )
+                selectedItem?.let {
+                    navigationController.navigateToDistance(
+                        it,
+                        index,
+                        DistanceSelector.DISTANCE_REQUEST_CODE
+                    )
+                }
             }
             binding.distance.itemIndex = position
             binding.distance.setItem(item.distance)
 
             // Target round
             binding.target.setOnClickListener { selectedItem, index ->
-                navigationController.navigateToTarget(selectedItem!!, index)
+                selectedItem?.let {
+                    navigationController.navigateToTarget(it, index)
+                }
             }
             binding.target.itemIndex = position
             binding.target.setItem(item.targetTemplate)

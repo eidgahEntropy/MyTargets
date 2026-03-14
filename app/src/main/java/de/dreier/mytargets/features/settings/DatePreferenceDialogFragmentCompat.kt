@@ -32,7 +32,7 @@ class DatePreferenceDialogFragmentCompat : PreferenceDialogFragmentCompat(),
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val pref = preference as DatePreference
         return DatePickerDialog(
-            context!!, this,
+            requireContext(), this,
             pref.date.year,
             pref.date.monthValue - 1,
             pref.date.dayOfMonth

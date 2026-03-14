@@ -66,7 +66,7 @@ class EditArrowListFragment : EditableListFragmentBase<Arrow, SimpleListAdapterB
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_arrows, container, false)
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.addItemDecoration(
-            DividerItemDecoration(context!!, R.drawable.full_divider)
+            DividerItemDecoration(requireContext(), R.drawable.full_divider)
         )
         adapter = ArrowAdapter()
         binding.recyclerView.itemAnimator = SlideInItemAnimator()
@@ -78,7 +78,7 @@ class EditArrowListFragment : EditableListFragmentBase<Arrow, SimpleListAdapterB
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(ArrowListViewModel::class.java)
         viewModel.arrows.observe(this, Observer { arrows ->
             if (arrows != null) {

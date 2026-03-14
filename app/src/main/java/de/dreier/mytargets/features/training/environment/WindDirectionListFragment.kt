@@ -33,8 +33,8 @@ class WindDirectionListFragment :
         savedInstanceState: Bundle?
     ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
-        adapter.setList(WindDirection.getList(context!!))
-        val windDirection = arguments!!.getParcelable<WindDirection>(ITEM)
+        adapter.setList(WindDirection.getList(requireContext()))
+        val windDirection = requireArguments().getParcelable<WindDirection>(ITEM)
         selectItem(binding.recyclerView, windDirection!!)
         return binding.root
     }
@@ -42,5 +42,5 @@ class WindDirectionListFragment :
     override fun getName(item: WindDirection) = item.name
 
     override fun getDrawable(item: WindDirection) =
-        ContextCompat.getDrawable(context!!, item.drawable)!!
+        ContextCompat.getDrawable(requireContext(), item.drawable)!!
 }

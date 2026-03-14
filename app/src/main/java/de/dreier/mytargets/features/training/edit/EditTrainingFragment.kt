@@ -64,16 +64,17 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
     private val database by lazy(LazyThreadSafetyMode.NONE) { ApplicationInstance.db }
     private val trainingDAO by lazy(LazyThreadSafetyMode.NONE) { database.trainingDAO() }
 
-    private val training: Training
+    private val training: Training?
         get() {
             val training = if (trainingId == null) {
                 Training()
             } else {
-                trainingDAO.loadTraining(trainingId!!)
+                val tid = trainingId ?: return null
+                trainingDAO.loadTraining(tid)
             }
             training.title = binding.training.text.toString()
             training.date = date
-            training.environment = binding.environment.selectedItem!!
+            training.environment = binding.environment.selectedItem ?: return null
             training.bowId = binding.bow.selectedItem?.id
             training.arrowId = binding.arrow.selectedItem?.id
             training.arrowNumbering = binding.numberArrows.isChecked
@@ -85,15 +86,15 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
             return training
         }
 
-    private val round: Round
+    private val round: Round?
         get() {
             val round = Round()
-            round.target = binding.target.selectedItem!!
+            round.target = binding.target.selectedItem ?: return null
             round.shotsPerEnd = binding.arrows.progress
             round.maxEndCount = null
-            round.distance = binding.distance.selectedItem!!
+            round.distance = binding.distance.selectedItem ?: return null
 
-            SettingsManager.target = binding.target.selectedItem!!
+            binding.target.selectedItem?.let { SettingsManager.target = it }
             SettingsManager.distance = round.distance
             SettingsManager.shotsPerEnd = round.shotsPerEnd
             return round
@@ -135,20 +136,27 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
             override fun onStopTrackingTouch(seekBar: DiscreteSeekBar) {}
         })
         binding.target.setOnClickListener { selectedItem, index ->
-            navigationController.navigateToTarget(selectedItem!!, index)
+            selectedItem?.let {
+                navigationController.navigateToTarget(it, index)
+            }
         }
         binding.distance.setOnClickListener { selectedItem, index ->
-            navigationController.navigateToDistance(selectedItem!!, index)
+            selectedItem?.let {
+                navigationController.navigateToDistance(it, index)
+            }
         }
         binding.standardRound.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToStandardRoundList(selectedItem!!)
+            selectedItem?.let {
+                navigationController.navigateToStandardRoundList(it)
+            }
         }
         binding.standardRound.setOnUpdateListener { item ->
-            roundTarget = item!!.roundTemplates[0].targetTemplate
+            roundTarget = item?.roundTemplates?.getOrNull(0)?.targetTemplate
         }
         binding.changeTargetFace.setOnClickListener {
+            val rt = roundTarget ?: return@setOnClickListener
             navigationController.navigateToTarget(
-                roundTarget!!,
+                rt,
                 requestCode = SR_TARGET_REQUEST_CODE,
                 fixedType = TargetListFragment.EFixedType.GROUP
             )
@@ -159,7 +167,9 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                 .start()
         }
         binding.arrow.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToArrowList(selectedItem!!)
+            selectedItem?.let {
+                navigationController.navigateToArrowList(it)
+            }
         }
         binding.bow.setOnAddClickListener {
             navigationController.navigateToCreateBow(EBowType.RECURVE_BOW)
@@ -167,11 +177,15 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                 .start()
         }
         binding.bow.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToBowList(selectedItem!!)
+            selectedItem?.let {
+                navigationController.navigateToBowList(it)
+            }
         }
         binding.bow.setOnUpdateListener { this.setScoringStyleForCompoundBow(it) }
         binding.environment.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToEnvironment(selectedItem!!)
+            selectedItem?.let {
+                navigationController.navigateToEnvironment(it)
+            }
         }
         binding.trainingDate.setOnClickListener { onDateClick() }
 
@@ -200,7 +214,8 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                 GONE
         } else {
             ToolbarUtils.setTitle(this, R.string.edit_training)
-            val train = trainingDAO.loadTraining(trainingId!!)
+            val tid = trainingId ?: return binding.root
+            val train = trainingDAO.loadTraining(tid)
             binding.training.setText(train.title)
             date = train.date
             binding.bow.setItemId(train.bowId)
@@ -280,15 +295,16 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
     override fun onSave() {
         navigationController.finish()
 
-        val training = training
+        val training = training ?: return
 
         if (trainingId == null) {
             val rounds: MutableList<Round>
             if (trainingType == FREE_TRAINING) {
                 training.standardRoundId = null
-                rounds = mutableListOf(round)
+                val r = round ?: return
+                rounds = mutableListOf(r)
             } else {
-                val standardRound = binding.standardRound.selectedItem!!
+                val standardRound = binding.standardRound.selectedItem ?: return
                 if (standardRound.standardRound.id == 0L) {
                     throw IllegalStateException("I assumed the standard round would have already been saved")
                     //StandardRoundDAO.insertStandardRound(standardRound.standardRound, standardRound.roundTemplates)
@@ -296,8 +312,9 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                 SettingsManager.standardRound = standardRound.standardRound.id
                 training.standardRoundId = standardRound.standardRound.id
                 rounds = standardRound.createRoundsFromTemplate()
+                val rt = roundTarget ?: return
                 for (round in rounds) {
-                    round.target = roundTarget!!
+                    round.target = rt
                 }
             }
             trainingDAO.insertTraining(training, rounds)

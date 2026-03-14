@@ -31,9 +31,13 @@ abstract class EditableListFragmentBase<T, U : ListAdapterBase<*, T>> : Fragment
     OnItemClickListener<T>, OnItemLongClickListener<T> where T : IIdSettable {
 
     /**
-     * Adapter for the fragment's RecyclerView
+     * Adapter for the fragment's RecyclerView.
+     * Must be initialized in onCreateView of subclasses.
      */
-    protected var adapter: U? = null
+    protected lateinit var adapter: U
+
+    protected val isAdapterInitialized: Boolean
+        get() = ::adapter.isInitialized
 
     var selector = MultiSelector()
 
@@ -70,10 +74,10 @@ abstract class EditableListFragmentBase<T, U : ListAdapterBase<*, T>> : Fragment
     }
 
     fun onDelete(deletedIds: List<Long>) {
-        FirebaseAnalytics.getInstance(context!!).logEvent("delete", null)
+        FirebaseAnalytics.getInstance(requireContext()).logEvent("delete", null)
         val undoDeletions = deleteItems(deletedIds)
         val message = resources.getQuantityString(itemTypeDelRes, deletedIds.size, deletedIds.size)
-        val coordinatorLayout = view!!.findViewById<View>(R.id.coordinatorLayout)
+        val coordinatorLayout = requireView().findViewById<View>(R.id.coordinatorLayout)
         Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG)
             .setAction(R.string.undo) {
                 undoDeletion(undoDeletions)
@@ -83,16 +87,16 @@ abstract class EditableListFragmentBase<T, U : ListAdapterBase<*, T>> : Fragment
 
     private fun deleteItems(deletedIds: List<Long>): MutableList<() -> T> {
         val deleted = deletedIds
-            .map { id -> adapter!!.getItemById(id) }
+            .map { id -> adapter.getItemById(id) }
             .filter { item -> item != null }
             .map { it!! }
             .toMutableList()
         val undoActions = mutableListOf<() -> T>()
         for (item in deleted) {
-            adapter!!.removeItem(item)
+            adapter.removeItem(item)
             undoActions.add(deleteItem(item))
         }
-        adapter!!.notifyDataSetChanged()
+        adapter.notifyDataSetChanged()
         reloadData()
         return undoActions
     }
@@ -101,13 +105,13 @@ abstract class EditableListFragmentBase<T, U : ListAdapterBase<*, T>> : Fragment
 
     private fun undoDeletion(deleted: MutableList<() -> T>) {
         deleted.map { it.invoke() }
-            .forEach { adapter!!.addItem(it) }
+            .forEach { adapter.addItem(it) }
         reloadData()
         deleted.clear()
     }
 
     override fun onClick(holder: SelectableViewHolder<T>, item: T?) {
-        if (!actionModeCallback!!.click(holder)) {
+        if (actionModeCallback?.click(holder) != true) {
             if (item != null) {
                 onSelected(item)
             }

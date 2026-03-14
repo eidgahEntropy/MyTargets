@@ -129,7 +129,7 @@ object InternalStorageBackup {
             listener: IAsyncBackupRestore.BackupStatusListener
         ) {
             try {
-                val ctx = context!!.get()!!
+                val ctx = context?.get() ?: return listener.onError("Context no longer available")
                 if (isContentUri(backup.fileId)) {
                     val stream = ctx.contentResolver.openInputStream(Uri.parse(backup.fileId))
                         ?: throw IOException("Unable to open selected backup")

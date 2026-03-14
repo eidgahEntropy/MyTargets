@@ -30,7 +30,7 @@ class BowListFragment : SelectPureListItemFragmentBase<Bow>(compareBy(Bow::name,
         val bows = bowDAO.loadBows().toMutableList()
         return {
             adapter.setList(bows)
-            val bow = arguments!!.getParcelable<Bow>(ITEM)
+            val bow = requireArguments().getParcelable<Bow>(ITEM)
             selectItem(binding.recyclerView, bow!!)
         }
     }

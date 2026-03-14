@@ -40,9 +40,9 @@ class DistanceFragment : Fragment() {
                 container,
                 false
             )
-        val distance = arguments!!.getParcelable<Dimension>(ITEM)
+        val distance = requireArguments().getParcelable<Dimension>(ITEM)
         binding.viewPager.adapter = distance?.let {
-            DistanceTabsFragmentPagerAdapter(activity!!,
+            DistanceTabsFragmentPagerAdapter(requireActivity(),
                 it
             )
         }

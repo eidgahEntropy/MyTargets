@@ -313,7 +313,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
         binding.recentBackupsList.isNestedScrollingEnabled = false
         binding.recentBackupsList
-            .addItemDecoration(DividerItemDecoration(context!!, VERTICAL))
+            .addItemDecoration(DividerItemDecoration(requireContext(), VERTICAL))
         ToolbarUtils.applyWindowInsetsToScrollableContent(binding.backupScrollView)
 
         setHasOptionsMenu(true)
@@ -434,7 +434,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
     private fun onBackupIntervalClicked() {
         val backupIntervals = listOf(*EBackupInterval.values())
-        MaterialDialog.Builder(context!!)
+        MaterialDialog.Builder(requireContext())
             .title(R.string.backup_interval)
             .items(backupIntervals)
             .itemsCallbackSingleChoice(
@@ -455,7 +455,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
     private fun onBackupLocationClicked() {
         val item = SettingsManager.backupLocation
-        MaterialDialog.Builder(context!!)
+        MaterialDialog.Builder(requireContext())
             .title(R.string.backup_location)
             .items(EBackupLocation.list)
             .itemsCallbackSingleChoice(
@@ -501,7 +501,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         backup = item.createAsyncRestore()
         binding.recentBackupsProgress.visibility = VISIBLE
         binding.recentBackupsList.visibility = GONE
-        adapter = BackupAdapter(context!!, object : OnItemClickListener<BackupEntry> {
+        adapter = BackupAdapter(requireContext(), object : OnItemClickListener<BackupEntry> {
             override fun onItemClicked(item: BackupEntry) {
                 showBackupDetails(item)
             }
@@ -512,7 +512,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         })
         binding.recentBackupsList.adapter = adapter
         backup?.connect(
-            context!!,
+            requireContext(),
             object : IAsyncBackupRestore.ConnectionListener {
                 override fun onLoginCancelled() {
                     internalApplyBackupLocation(EBackupLocation.INTERNAL_STORAGE)
@@ -540,7 +540,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
 
     override fun setActivityTitle() {
-        activity!!.setTitle(R.string.backup_action)
+        requireActivity().setTitle(R.string.backup_action)
     }
 
     private fun onBackupsLoaded(list: List<BackupEntry>) {
@@ -569,7 +569,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     }
 
     private fun showError(@StringRes title: Int, message: String) {
-        MaterialDialog.Builder(context!!)
+        MaterialDialog.Builder(requireContext())
             .title(title)
             .content(message)
             .positiveText(android.R.string.ok)
@@ -577,7 +577,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     }
 
     private fun showRestoreProgressDialog(): MaterialDialog {
-        return MaterialDialog.Builder(context!!)
+        return MaterialDialog.Builder(requireContext())
             .content(R.string.restoring)
             .progress(true, 0)
             .show()
@@ -593,7 +593,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
                 .format(item.lastModifiedAt),
             item.humanReadableSize
         )
-        MaterialDialog.Builder(context!!)
+        MaterialDialog.Builder(requireContext())
             .title(R.string.dialog_restore_title)
             .content(Utils.fromHtml(html))
             .positiveText(R.string.restore)
@@ -610,7 +610,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
             object : IAsyncBackupRestore.BackupStatusListener {
                 override fun onFinished() {
                     progress.dismiss()
-                    Utils.doRestart(context!!)
+                    Utils.doRestart(requireContext())
                 }
 
                 override fun onError(message: String) {
@@ -643,7 +643,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
     fun neverAskAgainForWritePermission() {
         isLeaving = true
-        MaterialDialog.Builder(context!!)
+        MaterialDialog.Builder(requireContext())
             .title(R.string.permission_required)
             .content(R.string.backup_permission_explanation)
             .positiveText(android.R.string.ok).negativeText(android.R.string.cancel)
@@ -659,7 +659,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     private fun leaveBackupSettings() {
         isLeaving = true
         val h = Handler()
-        h.post { activity!!.supportFragmentManager.popBackStack() }
+        h.post { requireActivity().supportFragmentManager.popBackStack() }
     }
 
 
@@ -692,8 +692,8 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
             override fun doInBackground(vararg params: Void): String? {
                 return try {
                     Timber.i("Importing backup from $uri")
-                    val st = context!!.contentResolver.openInputStream(uri)
-                    BackupUtils.importZip(context!!, st!!)
+                    val st = requireContext().contentResolver.openInputStream(uri)
+                    BackupUtils.importZip(requireContext(), st!!)
                     null
                 } catch (ioe: FileNotFoundException) {
                     ioe.printStackTrace()
@@ -707,7 +707,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
             override fun onPostExecute(errorMessage: String?) {
                 progress.dismiss()
                 if (errorMessage == null) {
-                    Utils.doRestart(context!!)
+                    Utils.doRestart(requireContext())
                 } else {
                     showError(R.string.import_failed, errorMessage)
                 }

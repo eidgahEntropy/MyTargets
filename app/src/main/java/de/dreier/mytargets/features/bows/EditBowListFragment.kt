@@ -65,7 +65,7 @@ class EditBowListFragment : EditableListFragmentBase<Bow, SimpleListAdapterBase<
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_bows, container, false)
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.addItemDecoration(
-            DividerItemDecoration(context!!, R.drawable.full_divider)
+            DividerItemDecoration(requireContext(), R.drawable.full_divider)
         )
         adapter = BowAdapter(selector, this, this)
         binding.recyclerView.itemAnimator = SlideInItemAnimator()

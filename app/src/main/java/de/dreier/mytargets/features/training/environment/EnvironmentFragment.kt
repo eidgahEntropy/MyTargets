@@ -37,6 +37,8 @@ class EnvironmentFragment : FragmentBase() {
     var environment: Environment? = null
     private lateinit var binding: FragmentEnvironmentBinding
     private var switchView: SwitchCompat? = null
+    @State
+    var outdoorState: Boolean = true
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,26 +59,34 @@ class EnvironmentFragment : FragmentBase() {
         binding.lightRain.setOnClickListener { setWeather(EWeather.LIGHT_RAIN) }
         binding.rain.setOnClickListener { setWeather(EWeather.RAIN) }
 
-        if (savedInstanceState == null) {
-            environment = arguments!!.getParcelable(ITEM)
+        if (savedInstanceState == null || environment == null) {
+            environment = arguments?.getParcelable(ITEM)
+                ?: Environment.getDefault(SettingsManager.indoor)
         }
-        setWeather(environment!!.weather)
-        binding.windSpeed.setItemId(environment!!.windSpeed.toLong())
-        binding.windDirection.setItemId(environment!!.windDirection.toLong())
-        binding.location.setText(environment!!.location)
+        val currentEnvironment = environment ?: Environment.getDefault(SettingsManager.indoor).also {
+            environment = it
+        }
+        if (savedInstanceState == null) {
+            outdoorState = !currentEnvironment.indoor
+        }
+        setWeather(currentEnvironment.weather)
+        binding.windSpeed.setItemId(currentEnvironment.windSpeed.toLong())
+        binding.windDirection.setItemId(currentEnvironment.windDirection.toLong())
+        binding.location.setText(currentEnvironment.location)
 
         binding.windDirection.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToWindDirection(selectedItem!!)
+            selectedItem?.let { navigationController.navigateToWindDirection(it) }
         }
         binding.windSpeed.setOnClickListener { selectedItem, _ ->
-            navigationController.navigateToWindSpeed(selectedItem!!)
+            selectedItem?.let { navigationController.navigateToWindSpeed(it) }
         }
 
         return binding.root
     }
 
     private fun setWeather(weather: EWeather) {
-        environment!!.weather = weather
+        val env = environment ?: return
+        env.weather = weather
         binding.sunny.setImageResource(EWeather.SUNNY.getDrawable(weather))
         binding.partlyCloudy.setImageResource(EWeather.PARTLY_CLOUDY.getDrawable(weather))
         binding.cloudy.setImageResource(EWeather.CLOUDY.getDrawable(weather))
@@ -88,13 +98,16 @@ class EnvironmentFragment : FragmentBase() {
         inflater.inflate(R.menu.environment_switch, menu)
         val item = menu.findItem(R.id.action_switch)
         switchView = item.actionView?.findViewById(R.id.action_switch_control)
-        switchView!!.setOnCheckedChangeListener { _, checked -> setOutdoor(checked) }
-        setOutdoor(!environment!!.indoor)
-        switchView!!.isChecked = !environment!!.indoor
+        switchView?.setOnCheckedChangeListener { _, checked ->
+            outdoorState = checked
+            setOutdoor(checked)
+        }
+        setOutdoor(outdoorState)
+        switchView?.isChecked = outdoorState
     }
 
     private fun setOutdoor(checked: Boolean) {
-        switchView!!.setText(if (checked) R.string.outdoor else R.string.indoor)
+        switchView?.setText(if (checked) R.string.outdoor else R.string.indoor)
         binding.indoorPlaceholder.visibility = if (checked) GONE else VISIBLE
         binding.weatherLayout.visibility = if (checked) VISIBLE else GONE
     }
@@ -105,18 +118,19 @@ class EnvironmentFragment : FragmentBase() {
     }
 
     fun onSave() {
-        val e = saveItem()
+        val e = saveItem() ?: return
         SettingsManager.indoor = e.indoor
         navigationController.setResultSuccess(e)
         navigationController.finish()
     }
 
-    private fun saveItem(): Environment {
+    private fun saveItem(): Environment? {
+        val env = environment ?: return null
         val e = Environment()
-        e.indoor = !switchView!!.isChecked
-        e.weather = environment!!.weather
-        e.windSpeed = binding.windSpeed.selectedItem!!.id.toInt()
-        e.windDirection = binding.windDirection.selectedItem!!.id.toInt()
+        e.indoor = !outdoorState
+        e.weather = env.weather
+        e.windSpeed = binding.windSpeed.selectedItem?.id?.toInt() ?: 0
+        e.windDirection = binding.windDirection.selectedItem?.id?.toInt() ?: 0
         e.location = binding.location.text.toString()
         return e
     }

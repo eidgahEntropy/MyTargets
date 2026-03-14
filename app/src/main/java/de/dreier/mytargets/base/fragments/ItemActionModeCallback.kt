@@ -92,16 +92,16 @@ class ItemActionModeCallback(
 
     fun longClick(holder: SelectableViewHolder<*>) {
         if (actionMode == null) {
-            val activity = fragment.activity as AppCompatActivity?
-            activity!!.startSupportActionMode(this)
+            val activity = fragment.requireActivity() as AppCompatActivity
+            activity.startSupportActionMode(this)
         }
         selector.setSelected(holder, true)
         updateTitle()
     }
 
     fun restartActionMode() {
-        val activity = fragment.getActivity() as AppCompatActivity?
-        activity!!.startSupportActionMode(this)
+        val activity = fragment.requireActivity() as AppCompatActivity
+        activity.startSupportActionMode(this)
         updateTitle()
     }
 

@@ -46,7 +46,7 @@ class EditArrowFragment : EditWithImageFragmentBase<ArrowImage>(R.drawable.arrow
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(EditArrowViewModel::class.java)
         viewModel.setArrowId(arguments.getLongOrNull(ARROW_ID))
         contentBinding.arrow = viewModel

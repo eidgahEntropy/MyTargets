@@ -65,7 +65,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.addItemDecoration(
-            DividerItemDecoration(context!!, R.drawable.full_divider)
+            DividerItemDecoration(requireContext(), R.drawable.full_divider)
         )
         adapter = RoundAdapter(BooleanArray(2))
         binding.recyclerView.itemAnimator = SlideInItemAnimator()
@@ -88,7 +88,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
         ToolbarUtils.showHomeAsUp(this)
         setHasOptionsMenu(true)
 
-        val factory = ViewModelFactory(activity!!.application!!)
+        val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(TrainingViewModel::class.java)
         trainingId = arguments.getLongOrNull(ITEM_ID)!!
         viewModel.setTrainingId(trainingId)
@@ -114,7 +114,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
             }
             binding.weatherIcon.setImageResource(colorDrawable)
 
-            activity!!.invalidateOptionsMenu()
+            requireActivity().invalidateOptionsMenu()
 
             ToolbarUtils.setTitle(this@TrainingFragment, training1.title)
             ToolbarUtils.setSubtitle(this@TrainingFragment, training1.formattedDate)
@@ -126,7 +126,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
 
             val equals = BooleanArray(2)
             binding.detailRoundInfo.text = TrainingInfoUtils.getTrainingInfo(
-                context!!,
+                requireContext(),
                 trainingAndRounds.first,
                 trainingAndRounds.second,
                 equals
@@ -159,7 +159,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
                 return true
             }
             R.id.action_comment -> {
-                MaterialDialog.Builder(context!!)
+                MaterialDialog.Builder(requireContext())
                     .title(R.string.comment)
                     .inputType(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
                     .input("", viewModel.training.value!!.comment) { _, input ->
@@ -221,7 +221,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
                 binding.subtitle.visibility = View.VISIBLE
             }
             binding.points.text = item.score
-                .format(Utils.getCurrentLocale(context!!), SettingsManager.scoreConfiguration)
+                .format(Utils.getCurrentLocale(requireContext()), SettingsManager.scoreConfiguration)
         }
     }
 }

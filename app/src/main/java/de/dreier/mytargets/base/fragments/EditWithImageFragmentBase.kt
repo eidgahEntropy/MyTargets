@@ -93,7 +93,7 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
                 imageFile = null
                 binding.imageView.setImageResource(defaultDrawable)
             } else {
-                imageFile = File(context!!.filesDir, images[0].fileName)
+                imageFile = File(requireContext().filesDir, images[0].fileName)
                 if (!imageFile!!.exists()) {
                     imageFile = null
                     binding.imageView.setImageResource(defaultDrawable)
@@ -105,7 +105,7 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
 
     protected val thumbnail: Thumbnail
         get() = if (imageFile == null) {
-            Thumbnail.from(context!!, defaultDrawable)
+            Thumbnail.from(requireContext(), defaultDrawable)
         } else Thumbnail.from(imageFile!!)
 
     override fun onCreateView(
@@ -158,7 +158,7 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setFocusListenerForAllEditText(view)
-        Utils.setupFabTransform(activity!!, binding.root)
+        Utils.setupFabTransform(requireActivity(), binding.root)
     }
 
     private fun setFocusListenerForAllEditText(view: View?) {
@@ -257,7 +257,7 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
 
                 override fun onCanceled(source: EasyImage.ImageSource?, type: Int) {
                     if (source == EasyImage.ImageSource.CAMERA_IMAGE) {
-                        val photoFile = EasyImage.lastlyTakenButCanceledPhoto(context!!)
+                        val photoFile = EasyImage.lastlyTakenButCanceledPhoto(requireContext())
                         photoFile?.delete()
                     }
                 }
@@ -341,7 +341,7 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
             try {
                 oldImageFile = imageFile
                 imageFile = File
-                    .createTempFile("img", oldImageFile!!.name, context!!.filesDir)
+                    .createTempFile("img", oldImageFile!!.name, requireContext().filesDir)
                 oldImageFile!!.moveTo(imageFile!!)
             } catch (e: IOException) {
                 e.printStackTrace()

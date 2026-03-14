@@ -1,0 +1,10 @@
+DEBUG_KEYSTORE_NAME=../debug.keystore
+DEBUG_KEYSTORE_PASSWORD=android
+DEBUG_KEY_ALIAS=androiddebugkey
+DEBUG_KEY_PASSWORD=android
+KEYSTORE_NAME=../keystore.jks
+KEYSTORE_PASSWORD=replace_me
+KEY_ALIAS=replace_me
+KEY_PASSWORD=replace_me
+CROWDIN_API_KEY=replace_me
+PLAY_STORE_JSON=../googlePlayAndroidDeveloper.json

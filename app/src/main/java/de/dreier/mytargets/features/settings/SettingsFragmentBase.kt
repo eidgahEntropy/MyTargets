@@ -48,7 +48,7 @@ abstract class SettingsFragmentBase : PreferenceFragmentCompat(),
         super.onViewCreated(view, savedInstanceState)
 
         view.setBackgroundColor(
-            ContextCompat.getColor(context!!, R.color.background_material_light)
+            ContextCompat.getColor(requireContext(), R.color.background_material_light)
         )
         listView?.let { recyclerView ->
             ToolbarUtils.applyWindowInsetsToScrollableContent(recyclerView)
@@ -75,7 +75,7 @@ abstract class SettingsFragmentBase : PreferenceFragmentCompat(),
     }
 
     protected open fun setActivityTitle() {
-        activity!!.title = findPreference(rootKey).title
+        requireActivity().title = findPreference(rootKey).title
     }
 
     override fun onPause() {

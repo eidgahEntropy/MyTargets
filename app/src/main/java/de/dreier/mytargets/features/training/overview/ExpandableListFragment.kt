@@ -29,22 +29,22 @@ abstract class ExpandableListFragment<H : IIdProvider, C> :
     private var savedInstanceState: Bundle? = null
 
     protected fun setList(children: List<C>, opened: Boolean) {
-        if (adapter!!.itemCount == 0) {
-            adapter!!.setList(children, opened)
+        if (adapter.itemCount == 0) {
+            adapter.setList(children, opened)
             if (savedInstanceState != null && savedInstanceState!!.containsKey(KEY_EXPANDED)) {
-                adapter!!.expandedIds = savedInstanceState!!.getLongArray(KEY_EXPANDED)!!.toList()
-            } else if (!opened && adapter!!.itemCount > 0) {
-                adapter!!.expandFirst()
+                adapter.expandedIds = savedInstanceState!!.getLongArray(KEY_EXPANDED)!!.toList()
+            } else if (!opened && adapter.itemCount > 0) {
+                adapter.expandFirst()
             }
             return
         }
-        adapter!!.setList(children)
+        adapter.setList(children)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (adapter != null) {
-            outState.putLongArray(KEY_EXPANDED, adapter!!.expandedIds.toLongArray())
+        if (isAdapterInitialized) {
+            outState.putLongArray(KEY_EXPANDED, adapter.expandedIds.toLongArray())
         }
     }
 

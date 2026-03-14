@@ -15,15 +15,16 @@
 
 package de.dreier.mytargets.base.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.fragment.app.Fragment
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.AsyncTaskLoader
-import androidx.loader.content.Loader
+import androidx.lifecycle.lifecycleScope
 import de.dreier.mytargets.base.navigation.NavigationController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 typealias LoaderUICallback = () -> Unit
@@ -31,11 +32,16 @@ typealias LoaderUICallback = () -> Unit
 /**
  * Generic fragment class used as base for most fragments.
  * Has Icepick build in to save state on orientation change.
+ *
+ * Uses coroutines scoped to the fragment's view lifecycle for background loading.
+ * This ensures callbacks are automatically cancelled when the view is destroyed,
+ * preventing null context/activity/binding crashes.
  */
-abstract class FragmentBase : Fragment(),
-    LoaderManager.LoaderCallbacks<FragmentBase.LoaderUICallbackHelper> {
+abstract class FragmentBase : Fragment() {
 
     protected lateinit var navigationController: NavigationController
+
+    private var loadJob: Job? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -43,56 +49,44 @@ abstract class FragmentBase : Fragment(),
         reloadData()
     }
 
-    @SuppressLint("StaticFieldLeak")
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderUICallbackHelper> {
-        return object : AsyncTaskLoader<LoaderUICallbackHelper>(context!!) {
-            override fun loadInBackground(): LoaderUICallbackHelper? {
-                val callback = onLoad(args)
-                return object : LoaderUICallbackHelper {
-                    override fun applyData() {
-                        callback.invoke()
-                    }
-                }
-            }
-        }
-    }
-
+    /**
+     * Called on a background thread to load data.
+     * Returns a callback that will be invoked on the main thread to update the UI.
+     *
+     * The returned callback is guaranteed to only run while the fragment's view is alive,
+     * so it is safe to access binding, context, and activity without null checks.
+     */
     @WorkerThread
     protected open fun onLoad(args: Bundle?): LoaderUICallback {
         return { }
     }
 
-    override fun onLoadFinished(
-        loader: Loader<LoaderUICallbackHelper>,
-        callback: LoaderUICallbackHelper
-    ) {
-        callback.applyData()
-    }
-
-    override fun onLoaderReset(loader: Loader<LoaderUICallbackHelper>) {
-
-    }
-
+    /**
+     * Triggers a background reload. Any previous in-flight load is cancelled.
+     * The load runs on [Dispatchers.IO] and the UI callback runs on the main thread,
+     * scoped to [viewLifecycleOwner.lifecycleScope] so it auto-cancels if the view is destroyed.
+     */
     protected fun reloadData() {
-        if (loaderManager.getLoader<Any>(LOADER_ID) != null) {
-            loaderManager.destroyLoader(LOADER_ID)
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch {
+            val uiCallback = withContext(Dispatchers.IO) {
+                onLoad(null)
+            }
+            uiCallback.invoke()
         }
-        loaderManager.restartLoader(LOADER_ID, null, this).forceLoad()
     }
 
     protected fun reloadData(args: Bundle) {
-        if (loaderManager.getLoader<Any>(LOADER_ID) != null) {
-            loaderManager.destroyLoader(LOADER_ID)
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch {
+            val uiCallback = withContext(Dispatchers.IO) {
+                onLoad(args)
+            }
+            uiCallback.invoke()
         }
-        loaderManager.restartLoader(LOADER_ID, args, this).forceLoad()
     }
 
     companion object {
         private const val LOADER_ID = 0
-    }
-
-    interface LoaderUICallbackHelper {
-        @UiThread
-        fun applyData()
     }
 }

@@ -136,8 +136,13 @@ object GoogleDriveBackup {
             backup: BackupEntry,
             listener: IAsyncBackupRestore.BackupStatusListener
         ) {
+            val ctx = context?.get()
+            if (ctx == null) {
+                listener.onError("Context no longer available")
+                return
+            }
             driveServiceHelper?.readFile(backup.fileId) {
-                BackupUtils.importZip(context!!.get()!!, it)
+                BackupUtils.importZip(ctx, it)
             }?.addOnSuccessListener {
                 listener.onFinished()
             }?.addOnFailureListener { e -> listener.onError(e.localizedMessage) }
@@ -209,17 +214,20 @@ object GoogleDriveBackup {
                     Timber.d("Signed in as %s", googleAccount.email!!)
 
                     initServiceHelper(googleAccount) //TODO check if redundant to connect
-                    listener!!.onConnected()
+                    listener?.onConnected()
                 }
                 .addOnFailureListener { exception ->
                     Timber.e(exception, "Unable to sign in.")
-                    listener!!.onConnectionSuspended()
+                    listener?.onConnectionSuspended()
                 }
         }
 
         private fun initServiceHelper(googleAccount: GoogleSignInAccount) {
-            val context = context!!.get()!!
-            val googleDriveService = buildDriveService(context, googleAccount)
+            val ctx = context?.get() ?: run {
+                Timber.e("Context no longer available when initializing service helper")
+                return
+            }
+            val googleDriveService = buildDriveService(ctx, googleAccount)
 
             // The DriveServiceHelper encapsulates all REST API and SAF functionality.
             // Its instantiation is required before handling any onClick actions.
