@@ -90,7 +90,8 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
 
         val factory = ViewModelFactory(requireActivity().application)
         viewModel = ViewModelProviders.of(this, factory).get(TrainingViewModel::class.java)
-        trainingId = arguments.getLongOrNull(ITEM_ID)!!
+        trainingId = arguments.getLongOrNull(ITEM_ID)
+            ?: throw IllegalStateException("Missing required argument: $ITEM_ID")
         viewModel.setTrainingId(trainingId)
 //        binding.training = viewModel
         viewModel.training.observe(this, Observer { training1 ->
@@ -134,7 +135,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
 
             adapter = RoundAdapter(equals)
             binding.recyclerView.adapter = adapter
-            adapter!!.setList(trainingAndRounds.second)
+            adapter.setList(trainingAndRounds.second)
         })
     }
 
@@ -162,7 +163,7 @@ open class TrainingFragment : EditableListFragmentBase<Round, SimpleListAdapterB
                 MaterialDialog.Builder(requireContext())
                     .title(R.string.comment)
                     .inputType(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-                    .input("", viewModel.training.value!!.comment) { _, input ->
+                    .input("", viewModel.training.value?.comment ?: "") { _, input ->
                         viewModel.setTrainingComment(input.toString())
                     }
                     .negativeText(android.R.string.cancel)

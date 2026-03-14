@@ -107,11 +107,15 @@ class StatisticsActivity : ChildActivityBase(),
                     return emptyList()
                 }
                 val rounds = roundDAO.loadRoundsBatched(roundIds)
-                val trainingsMap = rounds.map { (_, trainingId) -> trainingId!! }
+                val trainingsMap = rounds.mapNotNull { (_, trainingId) -> trainingId }
                     .distinct()
                     .map { id -> Pair(id, trainingDAO.loadTraining(id)) }
                     .toSparseArray()
-                return rounds.map { round -> Pair(trainingsMap.get(round.trainingId!!)!!, round) }
+                return rounds.mapNotNull { round ->
+                    val trainingId = round.trainingId ?: return@mapNotNull null
+                    val training = trainingsMap.get(trainingId) ?: return@mapNotNull null
+                    Pair(training, round)
+                }
             }
         }
     }
@@ -140,10 +144,14 @@ class StatisticsActivity : ChildActivityBase(),
     }
 
     private fun restoreCheckedStates() {
-        binding.distanceTags.tags.forEach { it.isChecked = distanceTags!!.contains(it.text) }
-        binding.diameterTags.tags.forEach { it.isChecked = diameterTags!!.contains(it.text) }
-        binding.arrowTags.tags.forEach { it.isChecked = arrowTags!!.contains(it.id) }
-        binding.bowTags.tags.forEach { it.isChecked = bowTags!!.contains(it.id) }
+        val dt = distanceTags ?: return
+        val dmt = diameterTags ?: return
+        val at = arrowTags ?: return
+        val bt = bowTags ?: return
+        binding.distanceTags.tags.forEach { it.isChecked = dt.contains(it.text) }
+        binding.diameterTags.tags.forEach { it.isChecked = dmt.contains(it.text) }
+        binding.arrowTags.tags.forEach { it.isChecked = at.contains(it.id) }
+        binding.bowTags.tags.forEach { it.isChecked = bt.contains(it.id) }
         binding.distanceTags.notifyTagsListChanged()
         binding.diameterTags.notifyTagsListChanged()
         binding.arrowTags.notifyTagsListChanged()
@@ -206,12 +214,17 @@ class StatisticsActivity : ChildActivityBase(),
         diameterTags = binding.diameterTags.checkedTags.map { it.text }.toHashSet()
         arrowTags = binding.arrowTags.checkedTags.map { it.id }.toHashSet()
         bowTags = binding.bowTags.checkedTags.map { it.id }.toHashSet()
-        filteredRounds = rounds!!
+        val currentRounds = rounds ?: return
+        val currentDistanceTags = distanceTags ?: return
+        val currentDiameterTags = diameterTags ?: return
+        val currentArrowTags = arrowTags ?: return
+        val currentBowTags = bowTags ?: return
+        filteredRounds = currentRounds
             .filter { (training, round) ->
-                distanceTags!!.contains(round.distance.toString())
-                        && diameterTags!!.contains(round.target.diameter.toString())
-                        && arrowTags!!.contains(training.arrowId)
-                        && bowTags!!.contains(training.bowId)
+                currentDistanceTags.contains(round.distance.toString())
+                        && currentDiameterTags.contains(round.target.diameter.toString())
+                        && currentArrowTags.contains(training.arrowId)
+                        && currentBowTags.contains(training.bowId)
             }
             .map { it.second }
             .groupBy { value -> Pair(value.target.id, value.target.getScoringStyle()) }
@@ -220,14 +233,16 @@ class StatisticsActivity : ChildActivityBase(),
         val animate = binding.viewPager.adapter == null
         val environment =
             if (trainingDAO.loadTrainings().first().environment.indoor) "Indoor" else "Outdoor"
+        val currentFilteredRounds = filteredRounds ?: return
         val adapter = StatisticsPagerAdapter(
-            supportFragmentManager, filteredRounds!!, animate, environment
+            supportFragmentManager, currentFilteredRounds, animate, environment
         )
         binding.viewPager.adapter = adapter
     }
 
     private fun getBowTags(): List<Tag> {
-        return rounds!!
+        val currentRounds = rounds ?: return emptyList()
+        return currentRounds
             .map { it.first.bowId }
             .distinct()
             .map { bid ->
@@ -241,7 +256,8 @@ class StatisticsActivity : ChildActivityBase(),
     }
 
     private fun getArrowTags(): List<Tag> {
-        return rounds!!
+        val currentRounds = rounds ?: return emptyList()
+        return currentRounds
             .map { it.first.arrowId }
             .distinct()
             .map { aid ->
@@ -256,7 +272,8 @@ class StatisticsActivity : ChildActivityBase(),
     }
 
     private fun getDistanceTags(): List<Tag> {
-        return rounds!!
+        val currentRounds = rounds ?: return emptyList()
+        return currentRounds
             .map { it.second.distance }
             .distinct()
             .sorted()
@@ -264,7 +281,8 @@ class StatisticsActivity : ChildActivityBase(),
     }
 
     private fun getDiameterTags(): List<Tag> {
-        return rounds!!
+        val currentRounds = rounds ?: return emptyList()
+        return currentRounds
             .map { it.second.target.diameter }
             .distinct()
             .sorted()
@@ -287,7 +305,7 @@ class StatisticsActivity : ChildActivityBase(),
                 return try {
                     val f = File(cacheDir, exportFileName)
                     CsvExporter(applicationContext, ApplicationInstance.db)
-                        .exportAll(f, filteredRounds!!.flatMap { it.second }.map { it.id })
+                        .exportAll(f, (filteredRounds ?: return null).flatMap { it.second }.map { it.id })
                     f.toUri(this@StatisticsActivity)
                 } catch (e: IOException) {
                     e.printStackTrace()

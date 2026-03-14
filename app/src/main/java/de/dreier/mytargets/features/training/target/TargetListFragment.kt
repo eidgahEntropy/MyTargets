@@ -51,7 +51,11 @@ class TargetListFragment :
 
     private val themedSpinnerAdapter: ArrayAdapter<String>
         get() {
-            val actionBar = (activity as AppCompatActivity).supportActionBar!!
+            val actionBar = (activity as? AppCompatActivity)?.supportActionBar
+                ?: return ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_spinner_item, ArrayList<String>()
+                )
             val themedContext = actionBar.themedContext
             val spinnerAdapter = ArrayAdapter(
                 themedContext,
@@ -90,7 +94,7 @@ class TargetListFragment :
         binding.targetSize.adapter = targetSizeAdapter
 
         // Process passed arguments
-        val target = requireArguments().getParcelable<Target>(ITEM)!!
+        val target = requireArguments().getParcelable<Target>(ITEM) ?: return
         val fixedType = EFixedType
             .valueOf(requireArguments().getString(FIXED_TYPE, NONE.name))
         val list = when (fixedType) {
@@ -135,13 +139,16 @@ class TargetListFragment :
         preferredSizeIndex: Int? = null
     ) {
         // Init scoring styles
-        val target = adapter.getItemById(selector.getSelectedId()!!)
-        val styles = target!!.model.scoringStyles.map { it.toString() }
-        updateAdapter(binding.scoringStyle, scoringStyleAdapter!!, styles, preferredScoringStyleIndex)
+        val selectedId = selector.getSelectedId() ?: return
+        val target = adapter.getItemById(selectedId) ?: return
+        val scoringAdapter = scoringStyleAdapter ?: return
+        val sizeAdapter = targetSizeAdapter ?: return
+        val styles = target.model.scoringStyles.map { it.toString() }
+        updateAdapter(binding.scoringStyle, scoringAdapter, styles, preferredScoringStyleIndex)
 
         // Init target size spinner
         val diameters = diameterToList(target.model.diameters)
-        updateAdapter(binding.targetSize, targetSizeAdapter!!, diameters, preferredSizeIndex)
+        updateAdapter(binding.targetSize, sizeAdapter, diameters, preferredSizeIndex)
         if (diameters.size > 1) {
             binding.targetSize.visibility = View.VISIBLE
         } else {

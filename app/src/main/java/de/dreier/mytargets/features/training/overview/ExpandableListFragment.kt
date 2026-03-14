@@ -31,8 +31,9 @@ abstract class ExpandableListFragment<H : IIdProvider, C> :
     protected fun setList(children: List<C>, opened: Boolean) {
         if (adapter.itemCount == 0) {
             adapter.setList(children, opened)
-            if (savedInstanceState != null && savedInstanceState!!.containsKey(KEY_EXPANDED)) {
-                adapter.expandedIds = savedInstanceState!!.getLongArray(KEY_EXPANDED)!!.toList()
+            val saved = savedInstanceState
+            if (saved != null && saved.containsKey(KEY_EXPANDED)) {
+                adapter.expandedIds = saved.getLongArray(KEY_EXPANDED)?.toList() ?: emptyList()
             } else if (!opened && adapter.itemCount > 0) {
                 adapter.expandFirst()
             }

@@ -125,7 +125,7 @@ class RoundFragment :
         val r = roundDAO.loadRound(roundId)
         round = r
         val ends = endRepository.loadAugmentedEnds(r.id)
-        val showFab = r.maxEndCount == null || ends.size < r.maxEndCount!!
+        val showFab = r.maxEndCount?.let { ends.size < it } ?: true
 
         return {
             adapter.setList(ends)

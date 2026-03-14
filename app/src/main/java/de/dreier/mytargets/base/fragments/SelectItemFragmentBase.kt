@@ -106,6 +106,9 @@ abstract class SelectItemFragmentBase<T, U : ListAdapterBase<out ItemBindingHold
      * @return The selected item
      */
     protected open fun onSave(): T {
-        return adapter.getItemById(selector.getSelectedId()!!)!!
+        val selectedId = selector.getSelectedId()
+            ?: throw IllegalStateException("No item selected")
+        return adapter.getItemById(selectedId)
+            ?: throw IllegalStateException("Selected item not found for id $selectedId")
     }
 }
