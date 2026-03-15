@@ -46,7 +46,7 @@
     <string name="bft_7">7 Bf : Tous les arbres balancent</string>
     <string name="bft_8">8 Bf : Les petites branches cassent</string>
     <string name="bft_9">9 Bf : Dégâts de tempête</string>
-    <string name="front">de devant</string>
+    <string name="front">de face</string>
     <string name="back">de derrière</string>
     <string name="left">de la gauche</string>
     <string name="right">de la droite</string>
@@ -61,14 +61,14 @@
     <string name="accessibility_description_shot_n_score">Tir %1$d: %2$s</string>
     <plurals name="rounds">
         <item quantity="one">%d série</item>
-        <item quantity="other">%d rounds</item>
+        <item quantity="other">%d séries</item>
     </plurals>
     <plurals name="ends_arrow">
         <item quantity="one">%1$d \u00D7 %2$d flèche</item>
-        <item quantity="other">%1$d \u00D7 %2$d arrows</item>
+        <item quantity="other">%1$d \u00D7 %2$d flèches</item>
     </plurals>
     <plurals name="arrows_per_end">
         <item quantity="one">%d flèche par volée</item>
-        <item quantity="other">%d arrows per end</item>
+        <item quantity="other">%d arrows par volée</item>
     </plurals>
 </resources>

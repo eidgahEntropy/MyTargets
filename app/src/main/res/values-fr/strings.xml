@@ -55,10 +55,10 @@
     <!-- Share -->
     <string name="share">Partager</string>
     <string name="dispersion_pattern">Diagramme de dispersion</string>
-    <string name="sharing_failed">Échec du partage !</string>
+    <string name="sharing_failed">Échec du partage !</string>
     <!-- Export -->
     <string name="send_exported">Envoyer les données exportées</string>
-    <string name="exporting_failed">L\'export n\'a pas fonctionné!</string>
+    <string name="exporting_failed">L\'export n\'a pas fonctionné !</string>
     <!-- New bow -->
     <string name="add_bow">Ajouter un arc</string>
     <string name="name">Nom</string>
@@ -110,17 +110,17 @@
     <!-- Statistics -->
     <!-- Import/Backup -->
     <string name="select_a_file">Choisir un fichier</string>
-    <string name="dir_not_created"> Le répertoire ne peut pas être créé!</string>
-    <string name="import_failed">L\'import a échoué!</string>
-    <string name="file_not_found">Fichier non trouvé!</string>
-    <string name="failed_reading_file">Echec de la lecture du fichier!</string>
+    <string name="dir_not_created"> Le répertoire ne peut pas être créé !</string>
+    <string name="import_failed">L\'import a échoué !</string>
+    <string name="file_not_found">Fichier non trouvé !</string>
+    <string name="failed_reading_file">Echec de la lecture du fichier !</string>
     <!-- Donate -->
     <string name="donate_2">Donner un Hamburger</string>
     <string name="donate_5">Donner un kebab</string>
     <string name="donate_10">Donner une grande pizza</string>
     <string name="donate_20">Donner de l\'essence</string>
-    <string name="donation_thank">Merci pour votre soutient!</string>
-    <string name="donate_text" formatted="false">Les montants inclus la TVA et 30% de commission pour Google.</string>
+    <string name="donation_thank">Merci pour votre soutien !</string>
+    <string name="donate_text" formatted="false">Les montants incluent la TVA et 30% de commission pour Google.</string>
     <!-- Timer -->
     <string name="timer">Chronomètre</string>
     <string name="touch_to_start">Appuyer pour démarrer</string>
@@ -149,7 +149,7 @@
     <string name="environment">Environnement</string>
     <string name="wind_speed">Vitesse du vent</string>
     <string name="wind_direction">Direction du vent</string>
-    <string name="sight_setting_removed">Réglage du viseur effacé !</string>
+    <string name="sight_setting_removed">Réglage du viseur effacé !</string>
     <string name="metric">Métrique</string>
     <string name="imperial">Imperial</string>
     <string name="undo">Annuler</string>
@@ -157,32 +157,32 @@
     <string name="expand_collapse">Développer/réduire</string>
     <string name="new_round_template">Nouveau modèle</string>
     <string name="arrow_numbers">Numéros de flèche</string>
-    <string name="round_removed">Série effacée !</string>
+    <string name="round_removed">Série effacée !</string>
     <string name="custom_round">Série personnalisée</string>
     <string name="filter">Filtre</string>
     <string name="club">Compagnie/Club</string>
     <string name="target">Cible</string>
     <string name="standard_round">Épreuve standard</string>
     <string name="use_as_template">Utiliser comme modèle?</string>
-    <string name="create_copy">Ceci est une manche standard\nVoulez-vous en créer une copie afin de l\'éditée?</string>
+    <string name="create_copy">Ceci est une épreuve standard\nVoulez-vous en créer une copie afin de l\'éditer ?</string>
     <string name="practice">Entraînement</string>
     <string name="edit_training">Modifier la séance</string>
     <string name="edit_standard_round">Modifier l\'épreuve standard</string>
     <plurals name="arrow_deleted">
-        <item quantity="one">%d flèche effacée</item>
-        <item quantity="other">%d flèches supprimés</item>
+        <item quantity="one">%d flèche supprimée</item>
+        <item quantity="other">%d flèches supprimées</item>
     </plurals>
     <plurals name="bow_deleted">
-        <item quantity="one">%d arc effacé</item>
+        <item quantity="one">%d arc supprimé</item>
         <item quantity="other">%d arcs supprimés</item>
     </plurals>
     <plurals name="training_deleted">
-        <item quantity="one">%d séance effacée</item>
-        <item quantity="other">%d séances effacées</item>
+        <item quantity="one">%d séance supprimée</item>
+        <item quantity="other">%d séances supprimées</item>
     </plurals>
     <plurals name="passe_deleted">
-        <item quantity="one">%d extrémité supprimée</item>
-        <item quantity="other">extrémités %d supprimées</item>
+        <item quantity="one">%d volée supprimée</item>
+        <item quantity="other">%d volées supprimées</item>
     </plurals>
     <plurals name="rounds">
         <item quantity="one">Série %d</item>
@@ -193,8 +193,8 @@
         <item quantity="other">%d Séries sélectionnées</item>
     </plurals>
     <plurals name="round_deleted">
-        <item quantity="one">%d série effacée</item>
-        <item quantity="other">%d séries effacées</item>
+        <item quantity="one">%d série supprimée</item>
+        <item quantity="other">%d séries supprimées</item>
     </plurals>
     <string name="date">Date</string>
     <string name="edit_round">Modifier la série</string>
@@ -214,7 +214,7 @@
     <string name="stabilizer">Stabilisateur</string>
     <string name="clicker">Clicker</string>
     <string name="arrow_number_x">Flèche numéro %s</string>
-    <string name="training_with_standard_round">Entraînement avec série standard</string>
+    <string name="training_with_standard_round">Entraînement avec épreuve standard</string>
     <string name="free_training">Entraînement libre</string>
     <string name="competition">Compétition</string>
     <string name="about">A propos de</string>
@@ -222,8 +222,8 @@
     <string name="contribute">Contribuer</string>
     <string name="connect">Se connecter</string>
     <string name="special_thanks_to">Remerciements spéciaux à</string>
-    <string name="all_translators">Toutes les personnes, qui ont aidé à traduire l’application !</string>
-    <string name="all_beta_testers">Tous le membres du groupe des bêta-testeurs qui ont régulièrement contribué à améliorer l\'app.</string>
+    <string name="all_translators">Toutes les personnes, qui ont aidé à traduire l’application !</string>
+    <string name="all_beta_testers">Tous les membres du groupe des bêta-testeurs qui ont régulièrement contribué à améliorer l\'app.</string>
     <string name="test_beta">Tester la dernière version bêta</string>
     <string name="join_on_slack">Join us on Slack</string>
     <string name="share_with_friends">Partagez avec vos amis</string>
@@ -235,7 +235,7 @@
     <string name="us">US</string>
     <string name="show_shots_training">Entrainement complet</string>
     <string name="show_shots_round">Série en cours</string>
-    <string name="show_shots_end">Fin actuelle</string>
+    <string name="show_shots_end">Volée actuelle</string>
     <string name="profile">Profil</string>
     <string name="birthday">Anniversaire</string>
     <string name="first_name">Prénom</string>
@@ -245,7 +245,7 @@
     <string name="archer">Archer</string>
     <string name="hits">Touches</string>
     <string name="misses">Manquées</string>
-    <string name="new_end">Nouvelle fin</string>
+    <string name="new_end">Nouvelle volée</string>
     <string name="distribution">Répartition</string>
     <string name="count">Décompte</string>
     <string name="diameter">Diamètre</string>
@@ -255,10 +255,10 @@
     <string name="arrow_diameter_scale">Échelle du diamètre de la flèche</string>
     <string name="timestamp">Date et heure</string>
     <string name="change_target_face">Changer de blason</string>
-    <string name="your_first_training">Votre première entrainement</string>
+    <string name="your_first_training">Votre premier entrainement</string>
     <string name="grouping">Groupement</string>
     <string name="show_clusters">Groupements</string>
-    <string name="first_training_description">Appuyez sur plus pour commencer un nouveau entrainement.</string>
+    <string name="first_training_description">Appuyez sur \'plus\' pour commencer un nouveau entrainement.</string>
     <string name="show_average">Moyenne</string>
     <string name="show_none">Vide</string>
     <string name="left_handed">Gaucher</string>
@@ -286,13 +286,13 @@
     <string name="daily">Quotidien</string>
     <string name="weekly">Hebdomadaire</string>
     <string name="monthly">Mensuel</string>
-    <string name="connection_failed">Échec de la connexion !</string>
+    <string name="connection_failed">Échec de la connexion !</string>
     <string name="shooting_indoor">Tir en salle</string>
     <string name="bow_rest_vertical_position">Position verticale</string>
     <string name="bow_rest">Repose flèche</string>
     <string name="bow_rest_horizontal_position">Position horizontale</string>
     <string name="bow_cam_settings">Paramètres des poulies</string>
-    <string name="bow_letoff_weight">Puissance résiduelle à l\'allonge</string>
+    <string name="bow_letoff_weight">Puissance résiduelle à l\'allonge (letoff)</string>
     <string name="bow_nocking_point">Nockset</string>
     <string name="bow_string">Corde</string>
     <string name="bow_scope_magnification">Zoom du scope</string>
@@ -300,10 +300,10 @@
     <string name="bow_button">Berger button</string>
     <string name="more_fields">Autres champs</string>
     <string name="recently_used">Utilisé récemment</string>
-    <string name="intro_title_track_training_progress">Oublier la feuille de scores !</string>
+    <string name="intro_title_track_training_progress">Oublier la feuille de scores !</string>
     <string name="intro_description_track_training_progress">Avec un suivi précis de vos flèches, vous pouvez tirer plus d\'enseignements de vos données d\'entrainement.</string>
     <string name="intro_title_everything_in_one_place">Tout ce qu\'il vous faut\nau même endroit</string>
-    <string name="intro_description_everything_in_one_place">Incluant la gestion de l\'arc , des flèches, des réglages de visée, chronomètre, statistiques, et bien plus…</string>
+    <string name="intro_description_everything_in_one_place">Incluant la gestion de l\'arc, des flèches, des réglages de visée, chronomètre, statistiques, et bien plus…</string>
     <string name="average_arrow_score_per_end">Moyenne de points par flèches par volée</string>
     <string name="show_end">Affichage sur la volée</string>
     <string name="show_round">Affichage sur la série</string>
@@ -313,7 +313,7 @@
     <string name="average_of">La moyenne de</string>
     <string name="displayed_shots">Tirs affichés</string>
     <string name="invalid_decimal_number">Nombre décimal non valide</string>
-    <string name="not_within_expected_range_mm">Pas dans l\'intervalle prévu de 1 à 20 mm</string>
+    <string name="not_within_expected_range_mm">Pas dans l\'intervalle prévu de 1 à 20 mm</string>
     <string name="not_within_expected_range_inch">Pas dans l\'intervalle attendu de 0 à 1 pouce</string>
     <string name="next_round">Série suivante</string>
     <string name="previous_round">Série précédente</string>
@@ -324,7 +324,7 @@
     <string name="show_percentage">Voir le pourcentage</string>
     <string name="show_arrow_average">Afficher la moyenne par flèche</string>
     <string name="image_deleted">Image supprimée</string>
-    <string name="delete_image">Supprimer l\'image ?</string>
+    <string name="delete_image">Supprimer l\'image ?</string>
     <string name="keyboard_type">Type de clavier</string>
     <string name="keyboard_enabled">Clavier activé</string>
     <string name="sort_shots">Trier les flèches</string>
@@ -353,7 +353,7 @@
     <string name="settings_summary_scoreboard">Changer l’apparence du tableau de scores</string>
     <string name="settings_summary_input">Personnaliser l’écran de saisie</string>
     <string name="settings_summary_overview">Personnaliser les informations affichées pour les entraienements, les séries et les volées</string>
-    <string name="settings_summary_profile">Entrer vosinformations personnelles</string>
+    <string name="settings_summary_profile">Entrer vos informations personnelles</string>
     <string name="licence_number">Numéro de licence</string>
     <string name="file_type">Type de fichier</string>
     <string name="clear">Effacer</string>
@@ -365,6 +365,6 @@
     <string name="keep_above_lockscreen">Au-dessus de l\'écran de verrouillage</string>
     <string name="scoreboard_title_all_rounds">Toutes les séries</string>
     <string name="permission_required">Autorisation nécessaire</string>
-    <string name="backup_permission_explanation"><![CDATA[Pour être capable de sauver vos données, l\'application a besoin de l\'autorisation d\'accèder au stockage interne de votre téléphone. Pour utiliser la fonctionalité de backup, allez dans les paramètres systême > Apps > MyTargets > Autorisations et activez le paramètre \'Storage\'.]]></string>
+    <string name="backup_permission_explanation"><![CDATA[Pour être capable de sauver vos données, l\'application a besoin de l\'autorisation d\'accèder au stockage interne de votre téléphone. Pour utiliser la fonctionalité de sauvegarde, allez dans les paramètres systême > Apps > MyTargets > Autorisations et activez le paramètre \'Storage\'.]]></string>
     <string name="fix_db">Attempt to fix database</string>
 </resources>
