@@ -15,20 +15,23 @@
 
 package de.dreier.mytargets.features.help
 
-import android.app.AlertDialog
 import android.content.Intent
-import androidx.databinding.DataBindingUtil
 import android.os.Bundle
+import android.view.*
+import android.webkit.WebView
+import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import android.view.*
 import de.dreier.mytargets.R
 import de.dreier.mytargets.base.navigation.NavigationController
 import de.dreier.mytargets.databinding.FragmentWebBinding
 import de.dreier.mytargets.features.help.licences.LicencesActivity
 import de.dreier.mytargets.utils.ToolbarUtils
+import timber.log.Timber
 import java.io.IOException
 
 /**
@@ -71,29 +74,42 @@ class HelpFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_web, container, false)
-        val prompt = addBottomSpacerToHtml(helpHtmlPage)
-        binding.webView
-            .loadDataWithBaseURL("file:///android_asset/", prompt, "text/html", "utf-8", "")
-        binding.webView.isHorizontalScrollBarEnabled = false
-        val originalPaddingLeft = binding.webView.paddingLeft
-        val originalPaddingTop = binding.webView.paddingTop
-        val originalPaddingRight = binding.webView.paddingRight
-        val originalPaddingBottom = binding.webView.paddingBottom
-        ViewCompat.setOnApplyWindowInsetsListener(binding.webView) { view, windowInsets ->
-            val navInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
-            val safeBottomInset = maxOf(navInsets.bottom, imeInsets.bottom)
-            val extraBottomPx = (40 * view.resources.displayMetrics.density).toInt()
-            view.setPadding(
-                originalPaddingLeft,
-                originalPaddingTop,
-                originalPaddingRight,
-                originalPaddingBottom + safeBottomInset + extraBottomPx
+
+        try {
+            val webView = WebView(requireContext())
+            webView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-            binding.webView.clipToPadding = false
-            windowInsets
+            binding.webViewContainer.addView(webView)
+
+            val prompt = addBottomSpacerToHtml(helpHtmlPage)
+            webView.loadDataWithBaseURL("file:///android_asset/", prompt, "text/html", "utf-8", "")
+            webView.isHorizontalScrollBarEnabled = false
+
+            val originalPaddingLeft = webView.paddingLeft
+            val originalPaddingTop = webView.paddingTop
+            val originalPaddingRight = webView.paddingRight
+            val originalPaddingBottom = webView.paddingBottom
+            ViewCompat.setOnApplyWindowInsetsListener(webView) { view, windowInsets ->
+                val navInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+                val safeBottomInset = maxOf(navInsets.bottom, imeInsets.bottom)
+                val extraBottomPx = (40 * view.resources.displayMetrics.density).toInt()
+                view.setPadding(
+                    originalPaddingLeft,
+                    originalPaddingTop,
+                    originalPaddingRight,
+                    originalPaddingBottom + safeBottomInset + extraBottomPx
+                )
+                webView.clipToPadding = false
+                windowInsets
+            }
+            ViewCompat.requestApplyInsets(webView)
+        } catch (e: Exception) {
+            Timber.e(e, "WebView initialization failed")
+            binding.errorText.visibility = View.VISIBLE
         }
-        ViewCompat.requestApplyInsets(binding.webView)
         return binding.root
     }
 

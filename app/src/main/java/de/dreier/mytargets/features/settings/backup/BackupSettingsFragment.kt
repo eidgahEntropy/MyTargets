@@ -98,6 +98,8 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
      */
     private val syncStatusObserver = SyncStatusObserver {
         activity?.runOnUiThread {
+            // Guard against callback firing after fragment detach
+            if (!isAdded || context == null) return@runOnUiThread
             // Check if we should ignore this status update (just force-cleared UI)
             if (ignoreNextSyncStatus) {
                 Timber.d("Ignoring sync status update after force-clear")

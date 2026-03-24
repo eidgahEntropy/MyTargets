@@ -401,4 +401,5 @@
     <string name="time_range" translatable="false">Time range</string>
     <string name="remove_all_photos">Remove All Photos</string>
     <string name="cancel">Cancel</string>
+    <string name="webview_unavailable">Unable to load. Please update WebView from the Play Store.</string>
 </resources>

@@ -7,9 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import android.widget.TextView
 import de.dreier.mytargets.R
 import de.dreier.mytargets.base.fragments.FragmentBase
-
+import timber.log.Timber
 
 class ShopFragment : FragmentBase() {
     override fun onCreateView(
@@ -17,25 +19,31 @@ class ShopFragment : FragmentBase() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_shop, container, false)
-        val webView = view.findViewById<WebView>(R.id.webViewShop)
-        val webSettings = webView.settings
-        webView.loadUrl("https://mantisarchery.com?utm_source=android&utm_medium=app&utm_app=MyTarget")
+        val webViewContainer = view.findViewById<FrameLayout>(R.id.webViewContainer)
+        val errorText = view.findViewById<TextView>(R.id.errorText)
 
-        // Enable Javascript
-        webSettings.javaScriptEnabled = true
-        // Force links and redirects to open in the WebView instead of in a browser
-        webView.webViewClient = WebViewClient()
-        webView.setOnKeyListener { _, keyCode, _ ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-                webView.goBack() // Navigate back to previous web page if there is one
-                webView.scrollTo(0, 0) // Scroll web-view back to top of previous page
+        try {
+            val webView = WebView(requireContext())
+            webView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            webViewContainer.addView(webView)
+
+            webView.settings.javaScriptEnabled = true
+            webView.webViewClient = WebViewClient()
+            webView.loadUrl("https://mantisarchery.com?utm_source=android&utm_medium=app&utm_app=MyTarget")
+            webView.setOnKeyListener { _, keyCode, _ ->
+                if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
+                    webView.goBack()
+                    webView.scrollTo(0, 0)
+                }
+                true
             }
-            true
+        } catch (e: Exception) {
+            Timber.e(e, "WebView initialization failed")
+            errorText.visibility = View.VISIBLE
         }
         return view
-
-
     }
-
-
 }
