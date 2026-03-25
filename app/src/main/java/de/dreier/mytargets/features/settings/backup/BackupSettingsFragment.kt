@@ -137,7 +137,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
                 cancelSyncTimeout()
                 stopBackupCompletionCheck()
                 if (backup != null) {
-                    backup?.getBackups(this)
+                    loadBackupsAsync()
                 }
             }
         }
@@ -167,7 +167,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
                 }
                 
                 // Refresh the backup list
-                backup?.getBackups(this)
+                loadBackupsAsync()
                 
                 // Show a toast to the user
                 Toast.makeText(
@@ -193,11 +193,11 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
             lastBackupCheckHandler?.postDelayed({
                 if (isRefreshing && backup != null) {
                     Timber.d("Checking for backup completion...")
-                    backup?.getBackups(object : IAsyncBackupRestore.OnLoadFinishedListener {
+                    loadBackupsAsync(object : IAsyncBackupRestore.OnLoadFinishedListener {
                         override fun onLoadFinished(backupEntries: List<BackupEntry>) {
                             val currentCount = backupEntries.size
                             Timber.d("Backup count check - Before: $backupCountBeforeSync, Current: $currentCount")
-                            
+
                             if (currentCount > backupCountBeforeSync) {
                                 // New backup detected! Force completion
                                 Timber.i("New backup detected - forcing sync completion")
@@ -207,7 +207,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
                                 scheduleNextCheck()
                             }
                         }
-                        
+
                         override fun onError(message: String) {
                             Timber.e("Error checking backups: $message")
                             // Keep checking despite error
@@ -248,7 +248,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         stopBackupCompletionCheck()
         
         // Refresh the backup list one final time
-        backup?.getBackups(this)
+        loadBackupsAsync()
         
         Toast.makeText(requireContext(), "Backup completed", Toast.LENGTH_SHORT).show()
     }
@@ -393,7 +393,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         ignoreNextSyncStatus = true
         
         // Refresh the backup list
-        backup?.getBackups(this)
+        loadBackupsAsync()
 
         // Now register the observer (after clearing UI state)
         syncObserverHandle = ContentResolver.addStatusChangeListener(
@@ -402,6 +402,37 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         
         // Trigger observer to check current state (will be ignored due to flag)
         syncStatusObserver.onStatusChanged(0)
+    }
+
+    private fun loadBackupsAsync() {
+        loadBackupsAsync(this)
+    }
+
+    private fun loadBackupsAsync(listener: IAsyncBackupRestore.OnLoadFinishedListener) {
+        val b = backup ?: return
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            // Capture results on IO thread via a one-shot listener
+            var result: List<BackupEntry>? = null
+            var error: String? = null
+            b.getBackups(object : IAsyncBackupRestore.OnLoadFinishedListener {
+                override fun onLoadFinished(backupEntries: List<BackupEntry>) {
+                    result = backupEntries
+                }
+                override fun onError(message: String) {
+                    error = message
+                }
+            })
+            // Post results back to main thread
+            withContext(Dispatchers.Main) {
+                if (!isAdded) return@withContext
+                val err = error
+                if (err != null) {
+                    listener.onError(err)
+                } else {
+                    listener.onLoadFinished(result ?: emptyList())
+                }
+            }
+        }
     }
 
     override fun onPause() {
@@ -526,7 +557,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
 
                 override fun onConnected() {
                     updateBackupLocation()
-                    backup?.getBackups(this@BackupSettingsFragment)
+                    loadBackupsAsync()
                 }
 
                 override fun onConnectionSuspended() {
@@ -626,7 +657,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
         backup?.deleteBackup(backupEntry, object : IAsyncBackupRestore.BackupStatusListener {
             override fun onFinished() {
                 adapter!!.remove(backupEntry)
-                backup?.getBackups(this@BackupSettingsFragment)
+                loadBackupsAsync()
             }
 
             override fun onError(message: String) {
