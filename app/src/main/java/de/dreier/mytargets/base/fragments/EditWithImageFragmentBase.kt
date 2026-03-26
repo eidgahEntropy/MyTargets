@@ -18,6 +18,7 @@ package de.dreier.mytargets.base.fragments
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -208,7 +209,12 @@ abstract class EditWithImageFragmentBase<T : Image> protected constructor(
     }
 
     internal fun onTakePicture() {
-        EasyImage.openCameraForImage(this, 0)
+        try {
+            EasyImage.openCameraForImage(this, 0)
+        } catch (e: ActivityNotFoundException) {
+            Timber.e(e, "No camera app available")
+            Toast.makeText(requireContext(), R.string.no_camera_app, Toast.LENGTH_LONG).show()
+        }
     }
 
     internal fun onSelectImage() {

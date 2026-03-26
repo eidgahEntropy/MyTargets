@@ -17,14 +17,19 @@ package de.dreier.mytargets.base.gallery
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager.widget.ViewPager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.afollestad.materialdialogs.MaterialDialog
 import com.evernote.android.state.State
 import de.dreier.mytargets.R
@@ -168,7 +173,7 @@ class GalleryActivity : ChildActivityBase() {
                 imageList.remove(currentItem)
                 updateResult()
                 invalidateOptionsMenu()
-                adapter!!.notifyDataSetChanged()
+                adapter?.notifyDataSetChanged()
                 val nextItem = Math.min(imageList.size() - 1, currentItem)
                 previewAdapter.setSelectedItem(nextItem)
                 binding.pager.currentItem = nextItem
@@ -181,7 +186,12 @@ class GalleryActivity : ChildActivityBase() {
     }
 
     internal fun onTakePicture() {
-        EasyImage.openCameraForImage(this, 0)
+        try {
+            EasyImage.openCameraForImage(this, 0)
+        } catch (e: ActivityNotFoundException) {
+            timber.log.Timber.e(e, "No camera app available")
+            Toast.makeText(this, R.string.no_camera_app, Toast.LENGTH_LONG).show()
+        }
     }
 
     internal fun onSelectImage() {
@@ -272,35 +282,28 @@ class GalleryActivity : ChildActivityBase() {
     }
 
     private fun loadImages(imageFile: List<File>) {
-        object : AsyncTask<Void, Void, List<String>>() {
-
-            override fun doInBackground(vararg params: Void): List<String> {
-                val internalFiles = ArrayList<String>()
-                for (file in imageFile) {
+        lifecycleScope.launch {
+            val files = withContext(Dispatchers.IO) {
+                imageFile.mapNotNull { file ->
                     try {
                         val internal = File.createTempFile("img", file.name, filesDir)
-                        internalFiles.add(internal.name)
                         file.moveTo(internal)
+                        internal.name
                     } catch (e: IOException) {
-                        e.printStackTrace()
+                        timber.log.Timber.e(e, "Failed to move image file")
+                        null
                     }
-
                 }
-                return internalFiles
             }
-
-            override fun onPostExecute(files: List<String>) {
-                super.onPostExecute(files)
-                imageList.addAll(files)
-                updateResult()
-                invalidateOptionsMenu()
-                previewAdapter.notifyDataSetChanged()
-                adapter!!.notifyDataSetChanged()
-                val currentPos = imageList.size() - 1
-                previewAdapter.setSelectedItem(currentPos)
-                binding.pager.currentItem = currentPos
-            }
-        }.execute()
+            imageList.addAll(files)
+            updateResult()
+            invalidateOptionsMenu()
+            previewAdapter.notifyDataSetChanged()
+            adapter?.notifyDataSetChanged()
+            val currentPos = imageList.size() - 1
+            previewAdapter.setSelectedItem(currentPos)
+            binding.pager.currentItem = currentPos
+        }
     }
 
     private fun goToImage(pos: Int) {
