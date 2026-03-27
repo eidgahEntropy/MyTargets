@@ -24,6 +24,11 @@ import android.view.View
 import android.view.WindowManager
 import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import de.dreier.mytargets.shared.R
 import de.dreier.mytargets.shared.models.TimerSettings
 import de.dreier.mytargets.shared.utils.VibratorCompat
@@ -34,7 +39,8 @@ abstract class TimerFragmentBase : Fragment(), View.OnClickListener {
 
     private var currentStatus = ETimerState.WAIT_FOR_START
     private var countdown: CountDownTimer? = null
-    private val horn by lazy { MediaPlayer.create(requireContext(), R.raw.horn) }
+    private var horn: MediaPlayer? = null
+    private var hornInitJob: kotlinx.coroutines.Job? = null
     lateinit var settings: TimerSettings
     private var exitAfterStop = true
 
@@ -56,6 +62,24 @@ abstract class TimerFragmentBase : Fragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.setOnClickListener(this)
+        // Pre-initialize MediaPlayer off main thread to avoid ANR
+        val ctx = requireContext().applicationContext
+        hornInitJob = viewLifecycleOwner.lifecycleScope.launch {
+            val player = withContext(Dispatchers.IO) {
+                try {
+                    MediaPlayer.create(ctx, R.raw.horn)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to create MediaPlayer for horn")
+                    null
+                }
+            }
+            if (isAdded && viewLifecycleOwner.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+                horn = player
+            } else {
+                // Fragment view gone — release immediately to avoid leak
+                player?.release()
+            }
+        }
         changeStatus(currentStatus)
     }
 
@@ -65,13 +89,39 @@ abstract class TimerFragmentBase : Fragment(), View.OnClickListener {
         countdown = null
     }
 
+    override fun onDestroyView() {
+        hornInitJob?.cancel()
+        hornInitJob = null
+        try {
+            horn?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            }
+        } catch (e: IllegalStateException) {
+            Timber.e(e, "MediaPlayer already released in onDestroyView")
+        }
+        horn = null
+        super.onDestroyView()
+    }
+
     override fun onDetach() {
         countdown?.cancel()
         countdown = null
-        if (horn.isPlaying) {
-            horn.stop()
+        hornInitJob?.cancel()
+        hornInitJob = null
+        try {
+            horn?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            }
+        } catch (e: IllegalStateException) {
+            Timber.e(e, "MediaPlayer already released")
         }
-        horn.release()
+        horn = null
         super.onDetach()
     }
 
@@ -158,18 +208,19 @@ abstract class TimerFragmentBase : Fragment(), View.OnClickListener {
     }
 
     private fun playHorn(n: Int) {
+        val player = horn ?: return
         try {
-            if (!horn.isPlaying && !isDetached) {
-                horn.setOnCompletionListener(null) // Remove any existing completion listener
-                horn.setOnCompletionListener {
+            if (!player.isPlaying && !isDetached) {
+                player.setOnCompletionListener(null)
+                player.setOnCompletionListener {
                     if (n > 1) {
                         playHorn(n - 1)
                     }
                 }
-                horn.start()
+                player.start()
             }
         } catch (e: IllegalStateException) {
-            // Handle the exception appropriately (e.g., log the error)
+            Timber.e(e, "MediaPlayer in bad state during playHorn")
         }
     }
 
