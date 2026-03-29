@@ -24,7 +24,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SyncStatusObserver
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -643,11 +642,13 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
             object : IAsyncBackupRestore.BackupStatusListener {
                 override fun onFinished() {
                     progress.dismiss()
+                    if (!isAdded) return
                     Utils.doRestart(requireContext())
                 }
 
                 override fun onError(message: String) {
                     progress.dismiss()
+                    if (!isAdded) return
                     showError(R.string.restore_failed, message)
                 }
             })
@@ -656,11 +657,13 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     private fun deleteBackup(backupEntry: BackupEntry) {
         backup?.deleteBackup(backupEntry, object : IAsyncBackupRestore.BackupStatusListener {
             override fun onFinished() {
+                if (!isAdded) return
                 adapter!!.remove(backupEntry)
                 loadBackupsAsync()
             }
 
             override fun onError(message: String) {
+                if (!isAdded) return
                 showError(R.string.delete_failed, message)
             }
         })
@@ -720,32 +723,30 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     }
 
     private fun importFromUri(uri: Uri) {
+        val ctx = context ?: return
         val progress = showRestoreProgressDialog()
-        object : AsyncTask<Void, Void, String>() {
-            override fun doInBackground(vararg params: Void): String? {
-                return try {
+        lifecycleScope.launch {
+            val errorMessage = withContext(Dispatchers.IO) {
+                try {
                     Timber.i("Importing backup from $uri")
-                    val st = requireContext().contentResolver.openInputStream(uri)
-                    BackupUtils.importZip(requireContext(), st!!)
+                    val st = ctx.contentResolver.openInputStream(uri)
+                    BackupUtils.importZip(ctx, st!!)
                     null
                 } catch (ioe: FileNotFoundException) {
                     ioe.printStackTrace()
-                    getString(R.string.file_not_found)
+                    ctx.getString(R.string.file_not_found)
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    getString(R.string.failed_reading_file)
+                    ctx.getString(R.string.failed_reading_file)
                 }
             }
-
-            override fun onPostExecute(errorMessage: String?) {
-                progress.dismiss()
-                if (errorMessage == null) {
-                    Utils.doRestart(requireContext())
-                } else {
-                    showError(R.string.import_failed, errorMessage)
-                }
+            progress.dismiss()
+            if (errorMessage == null) {
+                Utils.doRestart(ctx)
+            } else if (isAdded) {
+                showError(R.string.import_failed, errorMessage)
             }
-        }.execute()
+        }
     }
 
     override fun onLoadFinished(backupEntries: List<BackupEntry>) {
@@ -753,6 +754,7 @@ class BackupSettingsFragment : SettingsFragmentBase(), IAsyncBackupRestore.OnLoa
     }
 
     override fun onError(message: String) {
+        if (!isAdded) return
         binding.recentBackupsProgress.visibility = GONE
         binding.recentBackupsList.visibility = VISIBLE
         showError(R.string.loading_backups_failed, message)
