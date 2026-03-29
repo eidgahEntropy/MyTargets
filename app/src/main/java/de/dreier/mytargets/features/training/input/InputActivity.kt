@@ -154,6 +154,26 @@ class InputActivity : ChildActivityBase(), TargetViewBase.OnEndFinishedListener,
         )
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        // Temporarily null out `data` so StateSaver does not serialize it.
+        // LoaderResult contains the full AugmentedTraining (rounds → ends → shots)
+        // which can exceed the 1MB Binder transaction limit on large trainings,
+        // causing TransactionTooLargeException during activityStopped.
+        // On recreation, data == null triggers the loader to reload from DB.
+        //
+        // Persist current round/end position into intent extras so the loader
+        // restores the user to the correct position, not the original launch position.
+        val d = data
+        if (d != null) {
+            val currentRound = d.currentRound.round
+            intent.putExtra(ROUND_ID, currentRound.id)
+            intent.putExtra(END_INDEX, d.endIndex)
+        }
+        data = null
+        super.onSaveInstanceState(outState)
+        data = d
+    }
+
     override fun onResume() {
         super.onResume()
         if (data != null) {
