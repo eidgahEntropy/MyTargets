@@ -143,6 +143,16 @@ class DispersionPatternActivity : ChildActivityBase() {
         updateActionBarTitle()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        // Do NOT let StateSaver serialize `statistic` — it can contain thousands of
+        // Shot objects and exceed the 1MB Binder transaction limit, causing
+        // TransactionTooLargeException.  The data is reloaded from DB in onCreate().
+        val saved = statistic
+        statistic = null
+        super.onSaveInstanceState(outState)
+        statistic = saved
+    }
+
     override fun onResume() {
         super.onResume()
         val stat = statistic ?: return
