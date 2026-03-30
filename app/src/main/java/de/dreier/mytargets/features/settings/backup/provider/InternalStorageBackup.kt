@@ -94,34 +94,46 @@ object InternalStorageBackup {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 return emptyList()
             }
-            val resolver = context.contentResolver
-            val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                MediaStore.MediaColumns._ID,
-                MediaStore.MediaColumns.DATE_MODIFIED,
-                MediaStore.MediaColumns.SIZE
-            )
-            val selection =
-                "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ? AND ${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?"
-            val selectionArgs = arrayOf(
-                "${Environment.DIRECTORY_DOWNLOADS}/$FOLDER_NAME/%",
-                "MyTargets_backup_%.zip"
-            )
+            return try {
+                val resolver = context.contentResolver
+                val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                val projection = arrayOf(
+                    MediaStore.MediaColumns._ID,
+                    MediaStore.MediaColumns.DATE_MODIFIED,
+                    MediaStore.MediaColumns.SIZE
+                )
+                val selection =
+                    "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ? AND ${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?"
+                val selectionArgs = arrayOf(
+                    "${Environment.DIRECTORY_DOWNLOADS}/$FOLDER_NAME/%",
+                    "MyTargets_backup_%.zip"
+                )
 
-            val backups = mutableListOf<BackupEntry>()
-            resolver.query(collection, projection, selection, selectionArgs, null)?.use { cursor ->
-                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
-                val modifiedIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
-                val sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idIndex)
-                    val uri = ContentUris.withAppendedId(collection, id)
-                    val modified = cursor.getLong(modifiedIndex) * 1000L
-                    val size = cursor.getLong(sizeIndex)
-                    backups.add(BackupEntry(uri.toString(), modified, size))
-                }
+                val backups = mutableListOf<BackupEntry>()
+                resolver.query(collection, projection, selection, selectionArgs, null)
+                    ?.use { cursor ->
+                        val idIndex =
+                            cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+                        val modifiedIndex =
+                            cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
+                        val sizeIndex =
+                            cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
+                        while (cursor.moveToNext()) {
+                            val id = cursor.getLong(idIndex)
+                            val uri = ContentUris.withAppendedId(collection, id)
+                            val modified = cursor.getLong(modifiedIndex) * 1000L
+                            val size = cursor.getLong(sizeIndex)
+                            backups.add(BackupEntry(uri.toString(), modified, size))
+                        }
+                    }
+                backups
+            } catch (e: Exception) {
+                // Android 16 Beta and some devices throw IllegalArgumentException
+                // ("Volume external_primary not found") or SecurityException when
+                // querying MediaStore.Downloads. Fall back to local backups only.
+                Log.w(TAG, "Unable to read public downloads backups: ${e.message}", e)
+                emptyList()
             }
-            return backups
         }
 
         override fun restoreBackup(
