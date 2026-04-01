@@ -509,10 +509,9 @@ class TargetView : TargetViewBase {
     }
 
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
-        // Cancel animation
+        // Cancel animation but let the touch event continue into plotting
         if (animator != null) {
             cancelPendingAnimations()
-            return true
         }
 
         return super.onTouch(view, motionEvent)
