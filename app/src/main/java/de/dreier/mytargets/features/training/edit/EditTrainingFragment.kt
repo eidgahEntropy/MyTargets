@@ -317,6 +317,17 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                     round.target = rt
                 }
             }
+            // Null out stale FK references to prevent SQLiteConstraintException
+            // if the referenced bow/arrow/standard round was deleted
+            if (training.bowId != null && database.bowDAO().loadBowOrNull(training.bowId!!) == null) {
+                training.bowId = null
+            }
+            if (training.arrowId != null && database.arrowDAO().loadArrowOrNull(training.arrowId!!) == null) {
+                training.arrowId = null
+            }
+            if (training.standardRoundId != null && database.standardRoundDAO().loadStandardRoundOrNull(training.standardRoundId!!) == null) {
+                training.standardRoundId = null
+            }
             trainingDAO.insertTraining(training, rounds)
 
             val round = rounds[0]
@@ -329,7 +340,16 @@ class EditTrainingFragment : EditFragmentBase(), DatePickerDialog.OnDateSetListe
                 .start()
             navigationController.navigateToCreateEnd(round)
         } else {
-            // Edit training
+            // Edit training — same FK validation as create path
+            if (training.bowId != null && database.bowDAO().loadBowOrNull(training.bowId!!) == null) {
+                training.bowId = null
+            }
+            if (training.arrowId != null && database.arrowDAO().loadArrowOrNull(training.arrowId!!) == null) {
+                training.arrowId = null
+            }
+            if (training.standardRoundId != null && database.standardRoundDAO().loadStandardRoundOrNull(training.standardRoundId!!) == null) {
+                training.standardRoundId = null
+            }
             trainingDAO.updateTraining(training)
             requireActivity().overridePendingTransition(R.anim.left_in, R.anim.right_out)
         }
